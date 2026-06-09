@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Talkov Law — Partition Matter Plan Visualizer | Advocate Cloud Solutions</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Lato:wght@300;400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --acs-blue: #0057B8; --acs-dark-blue: #003D80; --acs-light-blue: #E8F0FE;
+    --acs-gold: #FFD700; --acs-silver: #ADADAD; --acs-light-silver: #F5F5F5;
+    --acs-charcoal: #1A1A1A; --acs-white: #FAFAFA;
+    --acs-bg: #F5F7FB; --acs-text: #1A1A1A; --acs-muted: #5A6276; --acs-line: #E4E7EE;
+    --role-intake: #16A085; --role-paralegal: #E67E22; --role-associate: #5DADE2;
+    --role-partner: #003D80; --role-attorney: #0057B8; --role-system: #7F8C8D;
+    --role-external: #C0392B; --role-finance: #28A745; --role-timekeepers: #8E44AD;
+    --role-decision: #C29A2A;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: 'Lato', Helvetica, Arial, sans-serif; color: var(--acs-text); background: var(--acs-bg); }
+  h1, h2, h3, h4 { font-family: 'Montserrat', Arial, sans-serif; }
+  header.brand { background: linear-gradient(135deg, var(--acs-dark-blue) 0%, var(--acs-blue) 100%); color: #fff; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+  header.brand h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  header.brand .sub { font-size: 12px; opacity: 0.85; margin-top: 2px; font-family: 'Lato', sans-serif; }
+  header.brand .acs-mark { font-weight: 700; font-size: 11px; letter-spacing: 1.5px; opacity: 0.9; text-align: right; }
+  header.brand .acs-mark .tag { display:block; color: var(--acs-gold); font-weight: 400; letter-spacing: 0.5px; font-size: 10px; margin-top: 2px; }
+  .pa-bar { background: #fff; border-bottom: 1px solid var(--acs-line); padding: 12px 32px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .pa-section { font-size: 11px; color: var(--acs-muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+  .pa-divider { width: 1px; height: 22px; background: var(--acs-line); margin: 0 6px; }
+  .pa-pill { padding: 8px 14px; border-radius: 999px; background: var(--acs-bg); border: 1px solid var(--acs-line); cursor: pointer; font-size: 13px; font-weight: 500; color: var(--acs-muted); transition: all 120ms; white-space: nowrap; }
+  .pa-pill:hover { border-color: var(--acs-blue); color: var(--acs-blue); }
+  .pa-pill.active { background: var(--acs-blue); color: #fff; border-color: var(--acs-blue); }
+  .summary { background: #fff; border-bottom: 1px solid var(--acs-line); padding: 18px 32px; display: grid; grid-template-columns: 2fr 1.2fr 1.2fr 2fr; gap: 24px; }
+  .summary h2 { margin: 0 0 4px; font-size: 18px; font-weight: 600; color: var(--acs-blue); }
+  .summary .sub { font-size: 11px; color: var(--acs-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; }
+  .summary .val { font-size: 13px; color: var(--acs-text); line-height: 1.5; }
+  .stage-nav { background: #fff; border-bottom: 1px solid var(--acs-line); padding: 10px 32px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .stage-btn { padding: 7px 11px; border-radius: 6px; background: var(--acs-bg); border: 1px solid var(--acs-line); cursor: pointer; font-size: 12px; font-weight: 500; color: var(--acs-muted); font-family: 'Lato', sans-serif; }
+  .stage-btn.active { background: var(--acs-blue); color: #fff; border-color: var(--acs-blue); }
+  .stage-btn.conditional { border-style: dashed; border-color: var(--acs-gold); }
+  .stage-btn.conditional.active { background: var(--role-decision); border-color: var(--role-decision); }
+  .stage-btn:hover:not(.active) { border-color: var(--acs-blue); color: var(--acs-blue); }
+  .stage-nav .spacer { flex: 1; }
+  .stage-nav .nav-btn { padding: 6px 10px; border-radius: 6px; background: #fff; border: 1px solid var(--acs-line); cursor: pointer; font-size: 12px; color: var(--acs-text); }
+  .stage-nav .hint { font-size: 11px; color: var(--acs-muted); padding-left: 6px; }
+  .canvas-wrap { position: relative; background: #fff; overflow: auto; min-height: 320px; max-height: 64vh; border-bottom: 1px solid var(--acs-line); }
+  .canvas-controls { position: sticky; top: 12px; float: right; margin: 12px 12px 0 0; background: #fff; border: 1px solid var(--acs-line); border-radius: 8px; padding: 6px; display: inline-flex; gap: 4px; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .canvas-controls button { border: 0; background: var(--acs-bg); width: 30px; height: 30px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+  .canvas-controls button:hover { background: var(--acs-blue); color: #fff; }
+  .zoom-value { min-width: 44px; text-align: center; font-size: 11px; color: var(--acs-muted); padding: 7px 0; font-family: 'JetBrains Mono', monospace; }
+  .mermaid-stage { padding: 28px; transform-origin: top left; transition: transform 100ms; }
+  .mermaid-stage svg { max-width: none !important; height: auto !important; }
+  .task-section { background: #fff; padding: 24px 32px; }
+  .task-section h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--acs-blue); }
+  .task-section .sub { font-size: 12px; color: var(--acs-muted); margin-bottom: 14px; }
+  .task-table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; border: 1px solid var(--acs-line); border-radius: 6px; overflow: hidden; }
+  .task-table th { background: var(--acs-light-blue); padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 600; color: var(--acs-dark-blue); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--acs-line); }
+  .task-table td { padding: 10px 12px; border-bottom: 1px solid var(--acs-line); vertical-align: top; line-height: 1.45; }
+  .task-table tr:last-child td { border-bottom: 0; }
+  .task-table .num { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--acs-muted); width: 36px; }
+  .task-table .role-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; }
+  .task-table .kind-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .task-table .kind-task { background: #ECEFF1; color: var(--acs-charcoal); }
+  .task-table .kind-automation { background: #DCD0FF; color: #2D1B69; }
+  .task-table .kind-gateway { background: #FFF1B8; color: #6D4A00; }
+  .task-table tr.row-automation td:first-child { border-left: 3px solid #6F42C1; }
+  .task-table tr.row-gateway td { background: #FFFBEC; }
+  .task-table tr.row-gateway td:first-child { border-left: 3px solid var(--acs-gold); }
+  .task-table .deps { font-size: 12px; color: var(--acs-muted); }
+  .task-table .detail { display: block; font-size: 12px; color: var(--acs-muted); margin-top: 2px; }
+  .task-table .gate-flag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 3px; background: var(--acs-gold); color: var(--acs-charcoal); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .task-table .crit-flag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 3px; background: #DC3545; color: #fff; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .task-table .cite { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 3px; background: var(--acs-light-blue); color: var(--acs-dark-blue); font-size: 10px; font-weight: 600; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+  .task-summary { margin-top: 10px; padding: 10px 14px; background: var(--acs-bg); border: 1px solid var(--acs-line); border-radius: 6px; font-size: 12px; color: var(--acs-muted); display: flex; gap: 16px; flex-wrap: wrap; }
+  .task-summary strong { color: var(--acs-text); font-weight: 600; }
+  .switch-box { margin-top: 16px; border: 1px solid var(--acs-line); border-left: 4px solid var(--acs-gold); border-radius: 6px; background: #FFFDF2; padding: 14px 16px; }
+  .switch-box h4 { margin: 0 0 6px; font-size: 11px; font-weight: 700; color: var(--acs-dark-blue); text-transform: uppercase; letter-spacing: 0.8px; }
+  .switch-box ul { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.7; color: var(--acs-text); }
+  .switch-box .mech { margin-top: 8px; font-size: 11.5px; color: var(--acs-muted); font-family: 'JetBrains Mono', monospace; }
+  .next-stage { background: #fff; border-top: 1px solid var(--acs-line); padding: 14px 32px; display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
+  .next-stage .label { font-size: 11px; color: var(--acs-muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+  .next-stage button { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border-radius: 999px; background: var(--acs-blue); color: #fff; border: 0; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: all 120ms; }
+  .next-stage button:hover { background: var(--acs-dark-blue); transform: translateX(2px); }
+  .next-stage button.alt { background: #fff; color: var(--acs-dark-blue); border: 1.5px solid var(--acs-gold); }
+  .next-stage button.alt:hover { background: var(--acs-gold); color: var(--acs-charcoal); }
+  .next-stage .arrow { font-size: 18px; line-height: 1; }
+  .next-stage.terminal button { background: var(--role-finance); cursor: default; }
+  .next-stage.terminal button:hover { background: var(--role-finance); transform: none; }
+  .panel { position: fixed; top: 0; right: -440px; width: 400px; height: 100vh; background: #fff; border-left: 1px solid var(--acs-line); box-shadow: -4px 0 16px rgba(0,61,128,0.10); transition: right 220ms cubic-bezier(.4,0,.2,1); z-index: 100; overflow-y: auto; }
+  .panel.open { right: 0; }
+  .panel-overlay { position: fixed; inset: 0; background: rgba(0,61,128,0.15); display: none; z-index: 99; }
+  .panel-overlay.open { display: block; }
+  .panel-header { padding: 20px 24px; border-bottom: 1px solid var(--acs-line); position: sticky; top: 0; background: #fff; }
+  .panel-header .role-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .panel-header h3 { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.3; }
+  .panel-body { padding: 20px 24px; }
+  .panel-body h4 { margin: 18px 0 6px; font-size: 11px; font-weight: 600; color: var(--acs-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .panel-body h4:first-child { margin-top: 0; }
+  .panel-body p { margin: 0 0 8px; font-size: 13px; line-height: 1.55; }
+  .panel-body code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--acs-light-blue); color: var(--acs-dark-blue); padding: 1px 5px; border-radius: 3px; }
+  .panel-close { position: absolute; top: 16px; right: 16px; background: var(--acs-bg); border: 0; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; font-size: 16px; color: var(--acs-muted); }
+  .legend { background: #fff; border-top: 1px solid var(--acs-line); padding: 14px 32px; display: flex; flex-wrap: wrap; gap: 14px; font-size: 11px; color: var(--acs-muted); }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .legend .swatch { width: 14px; height: 14px; border-radius: 3px; }
+  footer { background: var(--acs-dark-blue); color: #fff; padding: 14px 32px; font-size: 11px; opacity: 0.92; text-align: center; }
+  footer .gold { color: var(--acs-gold); }
+  /* Object model + template views */
+  .model-section { background: #fff; padding: 24px 32px; border-bottom: 1px solid var(--acs-line); }
+  .model-section h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--acs-blue); }
+  .model-section .sub { font-size: 12px; color: var(--acs-muted); margin-bottom: 14px; }
+  .obj-table { width: 100%; border-collapse: collapse; font-size: 12.5px; background: #fff; border: 1px solid var(--acs-line); border-radius: 6px; overflow: hidden; }
+  .obj-table th { background: var(--acs-light-blue); padding: 9px 12px; text-align: left; font-size: 11px; font-weight: 600; color: var(--acs-dark-blue); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--acs-line); }
+  .obj-table td { padding: 9px 12px; border-bottom: 1px solid var(--acs-line); vertical-align: top; line-height: 1.5; }
+  .obj-table tr:last-child td { border-bottom: 0; }
+  .obj-table code, .api { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--acs-light-blue); color: var(--acs-dark-blue); padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
+  .obj-table .pkg { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .pkg.managed { background: var(--acs-light-blue); color: var(--acs-dark-blue); }
+  .pkg.custom { background: var(--acs-gold); color: var(--acs-charcoal); }
+  .pkg.standard { background: #ECEFF1; color: var(--acs-charcoal); }
+  .stage-block { margin-bottom: 26px; }
+  .stage-block h4 { margin: 0 0 2px; font-size: 13.5px; font-weight: 600; color: var(--acs-dark-blue); }
+  .stage-block .guidance { font-size: 12px; color: var(--acs-muted); margin: 2px 0 10px; line-height: 1.5; }
+  .stage-block .guidance strong { color: var(--acs-text); }
+  .plan-card { border: 1px solid var(--acs-line); border-top: 4px solid var(--acs-blue); border-radius: 8px; background: #fff; padding: 18px 22px; margin-bottom: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .plan-card h4 { margin: 0 0 10px; font-size: 14px; color: var(--acs-blue); }
+  .plan-card .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 24px; font-size: 12.5px; }
+  .plan-card .grid .lbl { font-size: 10.5px; color: var(--acs-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .export-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 6px; background: var(--acs-blue); color: #fff; border: 0; cursor: pointer; font-family: 'Lato', sans-serif; font-size: 12.5px; font-weight: 600; }
+  .export-btn:hover { background: var(--acs-dark-blue); }
+  .notice { background: #FFF8E1; border-bottom: 1px solid #FFE082; padding: 8px 32px; font-size: 12px; color: #6D4C00; }
+  .node .nodeLabel, .node .label, .node foreignObject div, .node foreignObject span, .cluster .nodeLabel, .cluster .cluster-label { line-height: 1.4 !important; padding: 2px 4px !important; overflow: visible !important; }
+  .node foreignObject { overflow: visible !important; }
+  .edgeLabel { line-height: 1.3 !important; padding: 2px 6px !important; }
+  .node:hover rect, .node:hover polygon, .node:hover circle { filter: brightness(1.08); cursor: pointer; }
+  @media print {
+    @page { size: letter landscape; margin: 0.4in; }
+    .pa-bar, .stage-nav, .canvas-controls, .panel, .panel-overlay, .notice { display: none !important; }
+    .canvas-wrap { overflow: visible !important; max-height: none; }
+    .task-section, .model-section { page-break-inside: avoid; }
+    .mermaid-stage { transform: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="brand">
+  <div>
+    <h1>Talkov Law — California Partition Actions · Litify Matter Plan</h1>
+    <div class="sub">Target-State Matter Plan · Stages · Tasks · Stage Switches · Litify Object Model</div>
+  </div>
+  <div class="acs-mark">ADVOCATE CLOUD SOLUTIONS<span class="tag">Supercharging Legal Efficiency</span></div>
+</header>
+
+<nav class="pa-bar" id="paBar"></nav>
+
+<div id="workflowView">
+  <section class="summary" id="summary"></section>
+  <nav class="stage-nav" id="stageNav"></nav>
+  <div class="canvas-wrap">
+    <div class="canvas-controls">
+      <button onclick="zoom(-0.1)" title="Zoom out">−</button>
+      <span class="zoom-value" id="zoomVal">100%</span>
+      <button onclick="zoom(0.1)" title="Zoom in">+</button>
+      <button onclick="zoomFit()" title="Reset">⤢</button>
+    </div>
+    <div class="mermaid-stage" id="mermaidStage"></div>
+  </div>
+  <div class="next-stage" id="nextStage"></div>
+  <section class="task-section" id="taskSection"></section>
+  <div class="legend">
+    <div class="item"><span class="swatch" style="background:var(--role-intake)"></span>Intake</div>
+    <div class="item"><span class="swatch" style="background:var(--role-paralegal)"></span>Paralegal</div>
+    <div class="item"><span class="swatch" style="background:var(--role-associate)"></span>Associate</div>
+    <div class="item"><span class="swatch" style="background:var(--role-attorney)"></span>Attorney / Partner</div>
+    <div class="item"><span class="swatch" style="background:var(--role-finance)"></span>Finance / CPA</div>
+    <div class="item"><span class="swatch" style="background:#ECEFF1; border:1px solid var(--role-system)"></span>Litify Automation</div>
+    <div class="item"><span class="swatch" style="background:#FADBD8; border:1px solid var(--role-external)"></span>External (Court · Referee · Broker · Escrow)</div>
+    <div class="item"><span class="swatch" style="background:#FFF1B8; border:1px solid var(--role-decision)"></span>Gateway / Stage Switch</div>
+    <div class="item"><span class="swatch" style="background:var(--acs-gold)"></span>Exit-Gate Task</div>
+  </div>
+</div>
+
+<div id="modelView" style="display:none"></div>
+<div id="templateView" style="display:none"></div>
+
+<div class="panel-overlay" id="overlay" onclick="closePanel()"></div>
+<aside class="panel" id="panel"><div class="panel-header"><span class="role-badge" id="panelRole">Role</span><h3 id="panelTitle">Title</h3><button class="panel-close" onclick="closePanel()">×</button></div><div class="panel-body" id="panelBody"></div></aside>
+
+<footer>Prepared by <strong>Advocate Cloud Solutions</strong> · <span class="gold">Supercharging Legal Efficiency</span> · <span id="footerDate"></span> · Confidential — Talkov Law</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+document.getElementById('footerDate').textContent = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+
+mermaid.initialize({
+  startOnLoad: false, securityLevel: 'loose', theme: 'base',
+  flowchart: { htmlLabels:true, padding:22, nodeSpacing:55, rankSpacing:70, useMaxWidth:false, curve:'basis' },
+  themeVariables: { fontSize:'14px', fontFamily:'Lato, system-ui, sans-serif' },
+  themeCSS: `.node .nodeLabel,.node .label,.node foreignObject div,.node foreignObject span,.cluster .nodeLabel,.cluster .cluster-label{line-height:1.4!important;padding:2px 4px!important;overflow:visible!important}.node foreignObject{overflow:visible!important}.edgeLabel{line-height:1.3!important;padding:2px 6px!important}`
+});
+
+// ============================================================
+// PLAN HEADER
+// ============================================================
+const PLAN = {
+  name: 'Partition — CA Real Property (TIC)',
+  caseType: 'Partition',
+  stakeholders: 'Intake → Attorney → Paralegal/Associate → Court · Referee · Broker → Finance',
+  duration: '4–8 mo if PRPA buyout · 12–18 mo modal sale · 24–48 mo if contested offsets',
+  drivers: 'Absolute right to partition · PRPA applicability · Buyout election · Manner (sale vs in-kind) · Offsets · § 874.040 common-benefit fees'
+};
+
+const STAGES = [
+  { id:'overview', name:'Overview' },
+  { id:'intake',  name:'1. Intake & Qualification' },
+  { id:'consult', name:'2. Consultation & Engagement' },
+  { id:'prelit',  name:'3. Pre-Lit Investigation & Demand' },
+  { id:'plead',   name:'4. Pleadings & Lis Pendens' },
+  { id:'disc',    name:'5. Motions & Discovery' },
+  { id:'prpa',    name:'6. PRPA Track', conditional:true },
+  { id:'ij',      name:'7. Interlocutory Judgment' },
+  { id:'sale',    name:'8. Manner of Partition' },
+  { id:'acct',    name:'9. Accounting & Offsets' },
+  { id:'fees',    name:'10. Final Judgment & Fees' },
+  { id:'close',   name:'11. Distribution & Closeout' }
+];
+
+// Stage meta: duration, owners, exit gate (litify_pm__Guidance_for_success__c), and stage switches
+const STAGE_META = {
+  intake: { days:'1–5 days', owners:'Intake Director · Paralegal',
+    exitGate:'Intake form complete; conflicts cleared on all named co-owners; CA real property in TIC confirmed; consultation booked on attorney calendar.',
+    switches:[ { to:'consult', label:'Consultation booked → Switch to Stage 2', primary:true } ] },
+  consult: { days:'1–3 days', owners:'Attorney · Paralegal',
+    exitGate:'Engagement letter executed; retainer collected or contingency documented; Matter created in Litify with plan applied.',
+    switches:[ { to:'prelit', label:'Retained → Switch to Stage 3', primary:true },
+               { to:null, label:'Decline / Refer Out → Close Matter (Closed: Withdrawn)' } ] },
+  prelit: { days:'10–30 days', owners:'Paralegal · Associate · Partner',
+    exitGate:'Preliminary title report on file; cotenancy fractions confirmed on Role records; demand sent and response window expired without settlement.',
+    switches:[ { to:'plead', label:'No settlement → Switch to Stage 4', primary:true },
+               { to:'close', label:'Settles pre-suit → Switch to Stage 11 (Closed: Settled)' } ] },
+  plead: { days:'1–45 days', owners:'Associate · Paralegal · Process Server',
+    exitGate:'Complaint filed and served on all parties; lis pendens recorded with certified-mail proof in every county; answer or default in place for every defendant.',
+    switches:[ { to:'disc', label:'All parties answered/defaulted → Switch to Stage 5', primary:true } ] },
+  disc: { days:'120–300 days', owners:'Partner · Associate · Paralegal',
+    exitGate:'Right to partition established (MSA, stipulation, or trial); FMV expert designated; case postured for PRPA determination or interlocutory judgment.',
+    switches:[ { to:'prpa', label:'PRPA applies (§ 874.313) → Switch to Stage 6', primary:true },
+               { to:'ij', label:'PRPA does not apply → Switch to Stage 7' },
+               { to:'close', label:'Settles in discovery → Switch to Stage 11 (Closed: Settled)' } ] },
+  prpa: { days:'60–180 days', owners:'Court · Appraiser · Attorney · Cotenant', statute:'CCP §§ 874.311–874.323',
+    exitGate:'Buyout closed (PRPA exit) OR open-market sale confirmed OR PRPA-route in-kind partition ordered.',
+    switches:[ { to:'close', label:'Buyout funds & closes → Switch to Stage 11 (Closed: Settled)', primary:true },
+               { to:'ij', label:'No buyout → Switch to Stage 7 (manner determination)' } ] },
+  ij: { days:'30–90 days', owners:'Partner · Judge · Referee',
+    exitGate:'Interlocutory judgment entered determining all fractional interests and ordering partition; referee qualified, oath filed, bond posted if required.',
+    switches:[ { to:'sale', label:'Referee qualified → Switch to Stage 8', primary:true } ] },
+  sale: { days:'90–240 days', owners:'Referee · Broker · Court',
+    exitGate:'Sale closed and proceeds held in trust by referee, OR in-kind allocation final and confirmed by court.',
+    switches:[ { to:'acct', label:'Escrow closed / division confirmed → Switch to Stage 9', primary:true } ] },
+  acct: { days:'60–120 days', owners:'Paralegal · Associate · Partner · CPA',
+    exitGate:'Court-approved schedule of charges & credits per cotenant; net distribution per cotenant calculated.',
+    switches:[ { to:'fees', label:'Accounting schedule approved → Switch to Stage 10', primary:true } ] },
+  fees: { days:'30–90 days', owners:'Partner · Judge',
+    exitGate:'Final judgment of partition entered; § 874.040 fee/cost order entered; common-benefit fee recovery realized from tagged time.',
+    switches:[ { to:'close', label:'Fee order entered → Switch to Stage 11', primary:true } ] },
+  close: { days:'30–60 days', owners:'Referee · Paralegal · Title',
+    exitGate:'All proceeds distributed per court order; deeds recorded; referee discharged; lis pendens released in every county; Matter Status = Closed: Completed.',
+    switches:[] }
+};
+
+// ============================================================
+// TASK CATALOG — instantiated per stage as standard Task records
+// pinned to litify_pm__Matter__c + litify_pm__Matter_Stage_Activity__c
+// ============================================================
+const R = { intake:'Intake', para:'Paralegal', assoc:'Associate', partner:'Partner', atty:'Attorney',
+            sys:'Litify Auto', ext:'External', fin:'Finance/CPA', all:'All Timekeepers' };
+
+const ROLE_COLOR = {
+  'Intake':'var(--role-intake)', 'Paralegal':'var(--role-paralegal)', 'Associate':'var(--role-associate)',
+  'Partner':'var(--role-partner)', 'Attorney':'var(--role-attorney)', 'Litify Auto':'var(--role-system)',
+  'External':'var(--role-external)', 'Finance/CPA':'var(--role-finance)', 'All Timekeepers':'var(--role-timekeepers)'
+};
+
+// Litify team-role mapping used by the Plan Template view
+const TEAM_ROLE = { 'Intake':'Intake Specialist', 'Paralegal':'Paralegal', 'Associate':'Associate Attorney',
+  'Partner':'Partner', 'Attorney':'Handling Attorney', 'Litify Auto':'— (Flow / packaged automation)',
+  'External':'Paralegal (tracks external actor)', 'Finance/CPA':'Finance', 'All Timekeepers':'All Timekeepers' };
+
+const TASKS = {
+  intake: [
+    { n:1, name:'Lead capture', detail:'Website form, (877) PARTITION, or referral — Intake record auto-created (litify_pm__Intake__c)', role:R.sys, kind:'automation', due:'Real-time', deps:'—' },
+    { n:2, name:'Send intake form', detail:'Questionnaire, fee disclosure, document checklist — auto-fired on Intake create', role:R.sys, kind:'automation', due:'On Intake create', deps:'#1' },
+    { n:3, name:'Follow up until form complete', detail:'Cadence day 1 · 3 · 7 — SMS + email + call; abandon at day 14', role:R.intake, due:'Day 1 / 3 / 7', deps:'#2' },
+    { n:4, name:'Multi-party conflict check', detail:'Every named co-owner across all 7 offices (litify_pm__COI_Search__c)', role:R.para, cite:'CRPC 1.7', gate:true, due:'Form complete + 1 day', deps:'#3' },
+    { n:5, name:'Property & ownership pre-screen', detail:'Confirm CA real property held in TIC; capture FMV estimate, mortgage, occupancy', role:R.intake, due:'During qualification', deps:'#3' },
+    { n:6, name:'Geo-route to office', detail:'Match property county to nearest of 7 offices; assign attorney by capacity', role:R.sys, kind:'automation', due:'On conflicts clear', deps:'#4' },
+    { n:7, name:'Book consultation on calendar', detail:'Push to attorney Outlook with prep packet attached', role:R.intake, gate:true, due:'Conflicts clear + 1 day', deps:'#4, #6' }
+  ],
+  consult: [
+    { n:1, name:'Conduct consultation', detail:'Facts, ownership map, goal (sale vs buyout vs in-kind), fee structure', role:R.atty, gate:true, due:'Booked consult date', deps:'—' },
+    { n:2, name:'Retain / Decline / Refer-Out decision', detail:'Stage-switch gateway: signed engagement, declined, or referred to a non-partition firm', role:R.atty, kind:'gateway', due:'Consult day', deps:'#1' },
+    { n:3, name:'Prepare engagement letter', detail:'Talkov contingency template or hourly; cites contingency-eligibility test', role:R.sys, kind:'automation', due:'On Keep decision', deps:'#2' },
+    { n:4, name:'Sign engagement letter', detail:'E-signature; client acknowledges fee structure', role:R.atty, gate:true, due:'#3 + 3 days', deps:'#3' },
+    { n:5, name:'Collect retainer or document contingency', detail:'LawPay/Stripe for retainer; for contingency, equity-positive analysis to file', role:R.para, due:'#4 + 1 day', deps:'#4' },
+    { n:6, name:'Convert Intake → Matter in Litify', detail:'litify_pm__Matter__c created; Matter Plan auto-applied via Case Type = Partition; Stage 3 tasks instantiate', role:R.sys, kind:'automation', gate:true, due:'On signature', deps:'#4' }
+  ],
+  prelit: [
+    { n:1, name:'Order preliminary title report', detail:'Vesting deed, encumbrances, prior lis pendens', role:R.para, gate:true, due:'Stage start', deps:'—' },
+    { n:2, name:'Chain-of-title abstract', detail:'Pinpoint when TIC was created — matters for PRPA TIC-without-agreement test', role:R.assoc, due:'#1 + 7 days', deps:'#1' },
+    { n:3, name:'Build cotenancy ledger (initial)', detail:'One litify_pm__Role__c per co-owner (Role = Cotenant); fractional %, capacity, opening contributions', role:R.para, cite:'litify_pm__Role__c', due:'#1 + 7 days', deps:'#1' },
+    { n:4, name:'Collect contribution records', detail:'Mortgage, taxes, insurance, repairs, improvements, rents — feeds Wallace v. Daley analysis', role:R.para, due:'Stage start + 14 days', deps:'—' },
+    { n:5, name:'Demand letter', detail:'Cite LEG Investments v. Boxler (absolute right to partition); preview offsets per Wallace / Hunter', role:R.atty, kind:'automation', due:'#3 + 3 days', deps:'#2, #3' },
+    { n:6, name:'Settlement window', detail:'Stage-switch gateway: 14–21 days; log all communications; settle (→ Stage 11) or proceed (→ Stage 4)', role:R.assoc, kind:'gateway', due:'Demand + 14–21 days', deps:'#5' }
+  ],
+  plead: [
+    { n:1, name:'Draft verified complaint', detail:'§ 872.230 contents: property, interest, basis, manner sought', role:R.assoc, cite:'CCP § 872.230', gate:true, due:'Stage start + 5 days', deps:'—' },
+    { n:2, name:'Partner review of complaint', detail:'Verification with client', role:R.partner, gate:true, due:'#1 + 2 days', deps:'#1' },
+    { n:3, name:'E-file complaint', detail:'County portal; record case number on Matter (litify_pm__Docket_Number__c)', role:R.para, gate:true, due:'#2 + 1 day', deps:'#2' },
+    { n:4, name:'Record lis pendens — every county', detail:'Notice of Pendency, certified mail per § 405.22; defective service = expungement risk', role:R.sys, kind:'automation', cite:'CCP § 872.250', gate:true, due:'Immediately on filing', deps:'#3' },
+    { n:5, name:'Issue summons', detail:'Packets per defendant', role:R.para, due:'#3 + 1 day', deps:'#3' },
+    { n:6, name:'Serve all cotenants', detail:'Multi-state if any cotenant out-of-state; process server tracked per defendant', role:R.ext, cite:'CCP § 412.20', gate:true, due:'#5 + 30 days', deps:'#5' },
+    { n:7, name:'Track answers / cross-complaints', detail:'Typical: answer + cross-complaint for accounting/offsets', role:R.assoc, gate:true, due:'Service + 30 days', deps:'#6' },
+    { n:8, name:'Default prove-up', detail:'Shortcut to interlocutory judgment if applicable', role:R.assoc, cite:'CRC 3.110', due:'As applicable', deps:'#7' }
+  ],
+  disc: [
+    { n:1, name:'Initial disclosures', detail:'Mandatory per CCP § 2016.090', role:R.assoc, cite:'§ 2016.090', gate:true, due:'Stage start + 60 days', deps:'—' },
+    { n:2, name:'Written discovery', detail:'RFPs, SROGs, RFAs on title, mortgages, occupancy, contributions', role:R.assoc, cite:'§§ 2030/2031/2033', due:'#1 + 14 days', deps:'#1' },
+    { n:3, name:'Real-estate subpoenas', detail:'Escrow, lender, broker, HOA records', role:R.para, cite:'§ 2020.410', due:'#2 + 7 days', deps:'#2' },
+    { n:4, name:'Depositions of cotenants', detail:'Possession, contributions, ouster, settlement positions', role:R.partner, cite:'§ 2025', due:'Per schedule', deps:'#2' },
+    { n:5, name:'Designate appraiser / experts', detail:'FMV, CPA forensic if multi-year, great-prejudice expert if in-kind disputed', role:R.assoc, cite:'§ 2034.210', gate:true, due:'Per case schedule', deps:'#2' },
+    { n:6, name:'Defend lis pendens expungement', detail:'§ 405.32 probable validity; § 405.38 fee shift', role:R.partner, cite:'§§ 405.30–405.38', gate:true, due:'As filed', deps:'—' },
+    { n:7, name:'MSA on right to partition', detail:'The workhorse motion — Capuccio + LEG Investments; establishes right without trial', role:R.partner, cite:'CCP §§ 437c, 872.710', gate:true, due:'Discovery substantially complete', deps:'#4, #5' }
+  ],
+  prpa: [
+    { n:1, name:'Court determines PRPA applicability', detail:'Stage-switch gateway: TIC + no written partition agreement + filed on/after 1/1/2023 — sua sponte or on motion', role:R.ext, kind:'gateway', cite:'§ 874.313', due:'On motion / sua sponte', deps:'—' },
+    { n:2, name:'Court-ordered appraisal', detail:'Disinterested CA-licensed appraiser; sworn FMV', role:R.ext, cite:'§ 874.316', gate:true, due:'Per court order', deps:'#1' },
+    { n:3, name:'Notice of Fair Market Value', detail:'Clock 1: mailed within 10 days of receipt of appraisal', role:R.ext, kind:'automation', cite:'§ 874.316(c)', gate:true, due:'Appraisal + 10 days', deps:'#2' },
+    { n:4, name:'FMV objection hearing', detail:'Clock 2: not less than 30 days after notice', role:R.partner, cite:'§ 874.316(d)–(e)', gate:true, due:'Notice + 30 days', deps:'#3' },
+    { n:5, name:'Notice of buyout right', detail:'Clock 3: cotenants have 45 days to elect', role:R.ext, kind:'automation', cite:'§ 874.317(a)', gate:true, due:'Post-FMV confirmation', deps:'#4' },
+    { n:6, name:'Cotenant buyout election', detail:'Stage-switch gateway: buy partitioning cotenant at FMV × fractional share; multiple electors share pro rata', role:R.ext, kind:'gateway', cite:'§ 874.317(b)', due:'Notice + 45 days', deps:'#5' },
+    { n:7, name:'Buyout funding window', detail:'Clock 4: purchase price deposited within 60 days of election', role:R.ext, cite:'§ 874.317(d)', gate:true, due:'Election + 60 days', deps:'#6' },
+    { n:8, name:'If no buyout — manner determination', detail:'Partition in kind unless great prejudice; otherwise open-market sale', role:R.ext, kind:'gateway', cite:'§ 874.318', due:'Election window expired', deps:'#6' },
+    { n:9, name:'Open-market sale via broker', detail:'List at not less than appraised value; sealed bids permitted', role:R.ext, cite:'§ 874.319', due:'Per court order', deps:'#8' },
+    { n:10, name:'Court confirmation of open-market sale', detail:'Proceeds held subject to accounting', role:R.ext, cite:'§ 874.319(d)', gate:true, due:'Per court calendar', deps:'#9' }
+  ],
+  ij: [
+    { n:1, name:'Prepare interlocutory judgment', detail:'§ 872.720: determines right + interests, orders manner, appoints referee — milestone billing event', role:R.partner, cite:'CCP § 872.720', gate:true, due:'Stage start + 14 days', deps:'—' },
+    { n:2, name:'Stipulate or litigate manner', detail:'Stage-switch gateway: in kind / by sale / by appraisal (only if all stipulate — Cummings v. Dessel)', role:R.partner, kind:'gateway', cite:'§ 873.510', due:'With IJ submission', deps:'#1' },
+    { n:3, name:'Propose referee', detail:'Often a real-estate attorney or licensed broker', role:R.partner, cite:'§ 873.010', due:'With IJ submission', deps:'#1' },
+    { n:4, name:'Referee oath', detail:'Within 10 days of appointment', role:R.ext, cite:'§ 873.040', gate:true, due:'Appointment + 10 days', deps:'#3' },
+    { n:5, name:'Referee bond', detail:'If court orders — court discretion', role:R.ext, cite:'§ 873.010(b)(2)', due:'Per court order', deps:'#3' },
+    { n:6, name:'Referee engagement meeting', detail:'Property walkthrough, prior offers, recommended manner', role:R.ext, due:'Oath + 7 days', deps:'#4' }
+  ],
+  sale: [
+    { n:1, name:'Sale or in-kind?', detail:'Stage-switch gateway: modal outcome is sale; in-kind only where division would not cause great prejudice', role:R.ext, kind:'gateway', cite:'§§ 873.210, 873.510', due:'Per IJ', deps:'—' },
+    { n:2, name:'Listing agreement', detail:'Referee retains broker under § 873.060; commission rate set', role:R.ext, cite:'§ 873.060', gate:true, due:'IJ + 14 days', deps:'#1' },
+    { n:3, name:'Marketing period', detail:'MLS, open houses, price adjustments', role:R.ext, cite:'§ 873.610', due:'Listing + 30–90 days', deps:'#2' },
+    { n:4, name:'Acceptance of offer (court-subject)', detail:'PSA executed', role:R.ext, cite:'§ 873.620', due:'Per market', deps:'#3' },
+    { n:5, name:'Notice of sale', detail:'≥10 days before confirmation hearing', role:R.sys, kind:'automation', cite:'§ 873.640', gate:true, due:'Hearing − 10 days', deps:'#4' },
+    { n:6, name:'Referee’s report of sale', detail:'Describes terms, marketing, proceeds', role:R.ext, cite:'§ 873.710', gate:true, due:'With confirmation motion', deps:'#4' },
+    { n:7, name:'MTC sale + overbid math', detail:'§ 873.740 statutory minimum: 10% over first $10K + 5% over balance — auto-calculated', role:R.partner, kind:'automation', cite:'§§ 873.730, 873.740', gate:true, due:'Confirmation hearing', deps:'#6' },
+    { n:8, name:'Court order confirming sale → escrow close', detail:'Deed recorded; proceeds wired to referee trust; payoffs', role:R.ext, gate:true, due:'Confirmation + 30–45 days', deps:'#7' },
+    { n:9, name:'In-kind survey & division', detail:'Conditional path — surveyor; referee divides; court confirms', role:R.ext, cite:'§§ 873.210–873.290', due:'If in-kind ordered', deps:'#1' }
+  ],
+  acct: [
+    { n:1, name:'Mortgage / tax / insurance contributions', detail:'Credits per Hunter v. Schultz / Willmon v. Koyer', role:R.para, cite:'Hunter v. Schultz', gate:true, due:'Stage start + 14 days', deps:'—' },
+    { n:2, name:'Necessary repairs & improvements', detail:'Repairs at cost; improvements at lesser of cost or value enhancement (Wallace v. Daley)', role:R.para, cite:'Wallace v. Daley', due:'Stage start + 14 days', deps:'—' },
+    { n:3, name:'Rental value offset', detail:'Defensive use against credits when cotenant in exclusive possession', role:R.assoc, cite:'Hunter; Wallace', gate:true, due:'#1 + 7 days', deps:'#1' },
+    { n:4, name:'Ouster analysis', detail:'If pled — affirmative rents/profits recovery; mere exclusive occupancy insufficient', role:R.partner, cite:'Estate of Hughes', due:'#3 + 7 days', deps:'#3' },
+    { n:5, name:'Forensic CPA engagement', detail:'Multi-year cases or flow-through entity owners', role:R.fin, due:'As needed', deps:'#1, #2' },
+    { n:6, name:'Settle or try offsets', detail:'Stage-switch gateway: stipulated accounting (modal) or short-cause trial', role:R.partner, kind:'gateway', cite:'CCP § 872.140', due:'Schedules complete', deps:'#1–#5' },
+    { n:7, name:'Submit final accounting schedule', detail:'With motion for final judgment — generated from Expense / contribution records', role:R.sys, kind:'automation', gate:true, due:'On #6 resolution', deps:'#6' }
+  ],
+  fees: [
+    { n:1, name:'Draft final judgment', detail:'Confirms manner, incorporates accounting, allocates net proceeds', role:R.partner, cite:'§§ 872.730, 874.210', gate:true, due:'Stage start + 14 days', deps:'—' },
+    { n:2, name:'Tag time entries: common-benefit Y/N', detail:'At-entry workflow on litify_pm__Time_Entry__c.Common_Benefit__c — fee shifting only realizes if categorized at entry', role:R.all, kind:'automation', cite:'CCP § 874.040', gate:true, crit:true, due:'Continuous — enforced at entry', deps:'—' },
+    { n:3, name:'Motion for fee apportionment', detail:'Pro-rata default with broad equitable discretion', role:R.partner, cite:'Orien v. Lutz; Lin v. Jeng', gate:true, due:'Judgment + 30 days', deps:'#1' },
+    { n:4, name:'Fee declaration with common-benefit tagging', detail:'Capuccio v. Caire; Forrest v. Elam — generated from tagged Time Entries', role:R.partner, cite:'Capuccio v. Caire', due:'With #3', deps:'#2, #3' },
+    { n:5, name:'Fee hearing & order', detail:'Court rules on apportionment', role:R.ext, gate:true, due:'Per court calendar', deps:'#3, #4' }
+  ],
+  close: [
+    { n:1, name:'Disbursement instructions', detail:'To escrow / referee per final judgment + fee order', role:R.ext, gate:true, due:'Fee order + 7 days', deps:'—' },
+    { n:2, name:'Wire funds to all parties', detail:'Reconcile to penny — litify_pm__Resolution__c + Disbursement records', role:R.fin, gate:true, due:'#1 + 7 days', deps:'#1' },
+    { n:3, name:'Record deeds (in-kind cases)', detail:'Allocation deeds per court-confirmed division', role:R.para, due:'As applicable', deps:'#1' },
+    { n:4, name:'Release lis pendens — every county', detail:'Withdrawal recorded in every county where recorded', role:R.sys, kind:'automation', gate:true, due:'#2 + 7 days', deps:'#2' },
+    { n:5, name:'Final accounting & referee discharge', detail:'Referee files final account; court discharges', role:R.ext, cite:'§ 873.010(b)(4)', gate:true, due:'#2 + 30 days', deps:'#2' },
+    { n:6, name:'Client closeout & NPS', detail:'Final letter, retention package, referral ask', role:R.partner, kind:'automation', due:'#2 + 7 days', deps:'#2' },
+    { n:7, name:'Close Matter in Litify', detail:'litify_pm__Status__c = Closed: Completed; litify_pm__Closed_Date__c stamped; archive; release conflict locks', role:R.para, gate:true, due:'All tasks complete', deps:'#1–#6' }
+  ]
+};
+// ============================================================
+// MERMAID DIAGRAMS
+// ============================================================
+const PALETTE = `
+  classDef sys fill:#ECEFF1,stroke:#7F8C8D,color:#1A1A1A
+  classDef intake fill:#D1F2EB,stroke:#16A085,color:#1A1A1A
+  classDef para fill:#FDF2E9,stroke:#E67E22,color:#1A1A1A
+  classDef assoc fill:#EBF5FB,stroke:#5DADE2,color:#1A1A1A
+  classDef atty fill:#0057B8,stroke:#003D80,color:#fff
+  classDef fin fill:#E8F5E9,stroke:#28A745,color:#1A1A1A
+  classDef ext fill:#FADBD8,stroke:#C0392B,color:#1A1A1A
+  classDef dec fill:#FFF1B8,stroke:#C29A2A,color:#1A1A1A,stroke-width:1.5px
+  classDef stage fill:#0057B8,stroke:#003D80,color:#fff,stroke-width:1.4px
+  classDef stagec fill:#FFF1B8,stroke:#FFD700,color:#1A1A1A,stroke-width:2px
+  classDef closed fill:#E8E8E8,stroke:#616161,color:#1A1A1A,stroke-dasharray:5 3`;
+
+function planOverview() { return `flowchart LR
+  s1["1 · Intake &<br/>Qualification"]:::stage --> s2["2 · Consultation &<br/>Engagement"]:::stage
+  s2 --> d1{"Retain?"}:::dec
+  d1 -->|Retained| s3["3 · Pre-Lit<br/>Demand"]:::stage
+  d1 -->|Decline / Refer| cw["Closed: Withdrawn"]:::closed
+  s3 --> d2{"Settle<br/>pre-suit?"}:::dec
+  d2 -->|Yes| s11["11 · Distribution<br/>& Closeout"]:::stage
+  d2 -->|No| s4["4 · Pleadings &<br/>Lis Pendens"]:::stage
+  s4 --> s5["5 · Motions &<br/>Discovery"]:::stage
+  s5 --> d3{"PRPA applies?<br/>§ 874.313"}:::dec
+  d3 -->|Yes| s6["6 · PRPA Track<br/>10/30/45/60 clocks"]:::stagec
+  d3 -->|No| s7["7 · Interlocutory<br/>Judgment"]:::stage
+  s6 --> d4{"Buyout?"}:::dec
+  d4 -->|Closes| s11
+  d4 -->|No buyout| s7
+  s7 --> s8["8 · Manner of<br/>Partition"]:::stage
+  s8 --> s9["9 · Accounting<br/>& Offsets"]:::stage
+  s9 --> s10["10 · Final Judgment<br/>& Fees"]:::stage
+  s10 --> s11
+  s11 --> cc["Closed: Completed /<br/>Settled / Stipulated"]:::closed
+  ${PALETTE}`; }
+
+function stageDiagram(stageId) {
+  const D = (label, cls) => `["${label}"]:::${cls}`;
+  switch(stageId) {
+    case 'intake': return `flowchart LR
+      a${D('Lead Capture<br/>litify_pm__Intake__c','sys')}
+      b${D('Send Intake Form','sys')}
+      c${D('Followup Day 1·3·7','intake')}
+      d${D('Multi-Party Conflicts<br/>all named co-owners','para')}
+      e${D('Property Pre-Screen<br/>CA TIC confirmed','intake')}
+      f${D('Geo-Route to Office','sys')}
+      g${D('Book Consultation','intake')}
+      a-->b-->c-->d-->f-->g
+      c-->e-->g
+      ${PALETTE}`;
+    case 'consult': return `flowchart LR
+      a${D('Conduct Consultation','atty')}
+      b{"Retain · Decline ·<br/>Refer Out?"}:::dec
+      c${D('Engagement Letter<br/>(template automation)','sys')}
+      d${D('Sign Engagement Letter','atty')}
+      e${D('Retainer / Contingency<br/>Documented','para')}
+      f${D('Intake → Matter Conversion<br/>Plan applied by Case Type','sys')}
+      g${D('Closed: Withdrawn','ext')}
+      a-->b
+      b-->|Keep|c-->d-->e-->f
+      b-->|Decline / Refer|g
+      ${PALETTE}`;
+    case 'prelit': return `flowchart LR
+      a${D('Order Preliminary<br/>Title Report','para')}
+      b${D('Chain-of-Title Abstract<br/>PRPA eligibility','assoc')}
+      c${D('Cotenancy Ledger<br/>litify_pm__Role__c per owner','para')}
+      d${D('Collect Contribution<br/>Records','para')}
+      e${D('Demand Letter<br/>LEG Investments v. Boxler','atty')}
+      f{"Settle within<br/>14–21 days?"}:::dec
+      g${D('Switch → Stage 4 Pleadings','sys')}
+      h${D('Switch → Stage 11 Closeout<br/>Closed: Settled','sys')}
+      a-->b-->e
+      a-->c-->e
+      d-->e-->f
+      f-->|No|g
+      f-->|Yes|h
+      ${PALETTE}`;
+    case 'plead': return `flowchart LR
+      a${D('Draft Verified Complaint<br/>§ 872.230','assoc')}
+      b${D('Partner Review','atty')}
+      c${D('E-File Complaint','para')}
+      d${D('Record Lis Pendens<br/>EVERY county · § 405.22 mail','sys')}
+      e${D('Issue Summons','para')}
+      f${D('Serve All Cotenants','ext')}
+      g${D('Track Answers /<br/>Cross-Complaints','assoc')}
+      h${D('Default Prove-Up<br/>CRC 3.110','assoc')}
+      a-->b-->c-->d
+      c-->e-->f-->g-->h
+      ${PALETTE}`;
+    case 'disc': return `flowchart LR
+      a${D('Initial Disclosures<br/>§ 2016.090','assoc')}
+      b${D('Written Discovery<br/>RFP · SROG · RFA','assoc')}
+      c${D('Real-Estate Subpoenas','para')}
+      d${D('Depositions of Cotenants','atty')}
+      e${D('Designate Appraiser /<br/>Experts § 2034.210','assoc')}
+      f${D('Defend Lis Pendens<br/>Expungement','atty')}
+      g${D('MSA on Right to Partition<br/>Capuccio · LEG','atty')}
+      a-->b-->c
+      b-->d-->g
+      b-->e-->g
+      f-->g
+      ${PALETTE}`;
+    case 'prpa': return `flowchart LR
+      a{"PRPA Applies?<br/>§ 874.313"}:::dec
+      b${D('Court-Ordered Appraisal<br/>§ 874.316','ext')}
+      c${D('Notice of FMV<br/>10-day clock','sys')}
+      d${D('FMV Objection Hearing<br/>30-day clock','atty')}
+      e${D('Notice of Buyout Right<br/>45-day clock','sys')}
+      f{"Cotenant Buyout<br/>Election?"}:::dec
+      g${D('Funding Window<br/>60-day clock','ext')}
+      h${D('Switch → Stage 11<br/>Buyout closes','sys')}
+      i{"Manner § 874.318"}:::dec
+      j${D('Open-Market Sale<br/>via Broker § 874.319','ext')}
+      k${D('Court Confirmation','ext')}
+      l${D('Switch → Stage 7 IJ','sys')}
+      a-->|Yes|b-->c-->d-->e-->f
+      f-->|Elects|g-->h
+      f-->|No election|i
+      i-->|Sale|j-->k
+      i-->|In-kind / no PRPA route|l
+      ${PALETTE}`;
+    case 'ij': return `flowchart LR
+      a${D('Prepare Interlocutory<br/>Judgment § 872.720','atty')}
+      b{"Manner: Sale ·<br/>In-Kind · Appraisal?"}:::dec
+      c${D('Propose Referee<br/>§ 873.010','atty')}
+      d${D('Referee Oath<br/>10 days § 873.040','ext')}
+      e${D('Referee Bond<br/>if ordered','ext')}
+      f${D('Referee Engagement<br/>Meeting','ext')}
+      a-->b-->c-->d-->f
+      c-->e
+      ${PALETTE}`;
+    case 'sale': return `flowchart LR
+      a{"Sale or In-Kind?"}:::dec
+      b${D('Listing Agreement<br/>§ 873.060','ext')}
+      c${D('Marketing Period','ext')}
+      d${D('Accept Offer<br/>court-subject','ext')}
+      e${D('Notice of Sale<br/>≥10 days','sys')}
+      f${D("Referee's Report<br/>of Sale § 873.710",'ext')}
+      g${D('MTC + Overbid<br/>§ 873.740 math','sys')}
+      h${D('Confirmation +<br/>Escrow Close','ext')}
+      i${D('In-Kind Survey<br/>+ Division','ext')}
+      a-->|Sale|b-->c-->d-->e
+      d-->f-->g-->h
+      a-->|In-Kind|i
+      ${PALETTE}`;
+    case 'acct': return `flowchart LR
+      a${D('Mortgage / Tax / Insurance<br/>Credits — Hunter','para')}
+      b${D('Repairs + Improvements<br/>Wallace v. Daley','para')}
+      c${D('Rental Value Offset','assoc')}
+      d${D('Ouster Analysis<br/>Estate of Hughes','atty')}
+      e${D('Forensic CPA','fin')}
+      f{"Settle or Try<br/>Offsets?"}:::dec
+      g${D('Final Accounting Schedule<br/>auto-generated','sys')}
+      a-->f
+      b-->f
+      c-->d-->f
+      e-->f-->g
+      ${PALETTE}`;
+    case 'fees': return `flowchart LR
+      a${D('Draft Final Judgment<br/>§§ 872.730, 874.210','atty')}
+      b${D('Common-Benefit Tagging<br/>at entry — Time_Entry__c','sys')}
+      c${D('§ 874.040 Fee Motion<br/>Orien · Lin','atty')}
+      d${D('Fee Declaration<br/>from tagged time','atty')}
+      e${D('Fee Hearing + Order','ext')}
+      a-->c-->d-->e
+      b-->d
+      ${PALETTE}`;
+    case 'close': return `flowchart LR
+      a${D('Disbursement Instructions','ext')}
+      b${D('Wire Funds · Reconcile<br/>Resolution + Disbursement','fin')}
+      c${D('Record Deeds<br/>in-kind cases','para')}
+      d${D('Release Lis Pendens<br/>EVERY county','sys')}
+      e${D('Referee Final Account<br/>+ Discharge','ext')}
+      f${D('Client Closeout + NPS','atty')}
+      g${D('Matter Status →<br/>Closed: Completed','sys')}
+      a-->b-->d-->g
+      a-->c
+      b-->e-->g
+      b-->f
+      ${PALETTE}`;
+  }
+  return '';
+}
+
+function buildDiagram(stage) {
+  if (stage === 'overview') return planOverview();
+  return stageDiagram(stage);
+}
+// ============================================================
+// LITIFY OBJECT MODEL (verified against live-org describe)
+// ============================================================
+function objectModelDiagram() { return `flowchart LR
+  subgraph TPL["TEMPLATE SIDE — configured once"]
+    direction TB
+    ct["litify_pm__Case_Type__c<br/><b>Partition</b>"]:::pkg
+    mp["litify_pm__Matter_Plan__c<br/>Partition — CA Real Property (TIC)"]:::pkg
+    ms["litify_pm__Matter_Stage__c<br/>11 stages · Stage_Order__c<br/>Guidance_for_success__c"]:::pkg
+    dmt["litify_pm__Default_Matter_Task__c<br/>~77 tasks · due-date engine<br/>Matter_Team_Role__c assignment"]:::pkg
+    mss["litify_pm__Matter_Stage_Switch__c<br/>plan + stage pair<br/>cross-plan stage mapping"]:::gold
+    mtr["litify_pm__Matter_Team_Role__c"]:::pkg
+    ct --- mp
+    mp -->|1:n| ms -->|1:n| dmt
+    mp --- mss
+    ms --- mss
+    dmt --- mtr
+  end
+  subgraph INST["INSTANCE SIDE — per matter"]
+    direction TB
+    m["litify_pm__Matter__c<br/>Matter_Plan__c lookup<br/>Matter_Stage_Activity__c = CURRENT STAGE<br/>Status__c · Open/Closed dates"]:::pkg
+    msa["litify_pm__Matter_Stage_Activity__c<br/>one per stage per matter<br/>Order__c · Stage_Status__c<br/>Set_As_Active_At__c"]:::pkg
+    t["Task (standard)<br/>litify_pm__Matter__c lookup<br/>litify_pm__Matter_Stage_Activity__c lookup<br/>Status: Open → Completed / N/A"]:::std
+    m -->|1:n| msa -->|1:n| t
+  end
+  subgraph SUP["SUPPORTING OBJECTS — partition build"]
+    direction TB
+    i["litify_pm__Intake__c"]:::pkg
+    role["litify_pm__Role__c<br/>Party__c → Account<br/>= Cotenant ledger"]:::pkg
+    te["litify_pm__Time_Entry__c<br/>+ Common_Benefit__c (custom)"]:::gold
+    exp["litify_pm__Expense__c"]:::pkg
+    neg["litify_pm__Negotiation__c"]:::pkg
+    res["litify_pm__Resolution__c<br/>+ Disbursement"]:::pkg
+    lp["Lis_Pendens__c (custom)<br/>county · doc # · recorded ·<br/>released · § 405.22 proof"]:::gold
+  end
+  mp -.->|applied by Case Type<br/>on Matter create| m
+  ms -.->|instantiated as| msa
+  dmt -.->|generates| t
+  i -->|conversion| m
+  role --- m
+  te --- m
+  exp --- m
+  neg --- m
+  res --- m
+  lp --- m
+  classDef pkg fill:#E8F0FE,stroke:#0057B8,stroke-width:2px,color:#1A1A1A
+  classDef std fill:#ECEFF1,stroke:#7F8C8D,stroke-width:2px,color:#1A1A1A
+  classDef gold fill:#FFF1B8,stroke:#FFD700,stroke-width:2.5px,color:#1A1A1A`; }
+
+const MODEL_OBJECTS = [
+  { api:'litify_pm__Matter_Plan__c', pkg:'managed', label:'Matter Plan (template)', purpose:'The reusable plan header, keyed to Case Type via litify_pm__Case_Type__c. One per case type — ours: "Partition — CA Real Property (TIC)". Applied automatically on Matter create unless Ignore_Default_Plan__c = true.', fields:'Name · litify_pm__Case_Type__c · litify_pm__Estimated_Close_Date__c · litify_pm__Tasks__c (rollup)' },
+  { api:'litify_pm__Matter_Stage__c', pkg:'managed', label:'Matter Stage (template)', purpose:'Template stage under a plan. Stage_Order__c drives sequence; Guidance_for_success__c carries the exit-gate criteria shown to the team on the matter plan component.', fields:'litify_pm__Matter_Plan__c · litify_pm__Stage_Order__c · litify_pm__Guidance_for_success__c · litify_pm__Tasks__c' },
+  { api:'litify_pm__Default_Matter_Task__c', pkg:'managed', label:'Default Matter Task (template)', purpose:'Template task under a stage, with the full due-date engine: relative to stage activation, a Matter date field, or another task (Due_Date_Default_Matter_Task__c). Assigned by team role, resolved to a user from the Matter Team at instantiation.', fields:'litify_pm__Matter_Stage__c · litify_pm__Matter_Team_Role__c · litify_pm__Due_Date_Type__c · litify_pm__Due_Date_Matter_Date_Field__c / _Operator__c / _Value__c · litify_pm__Due_Date_Default_Matter_Task__c · litify_pm__Priority__c · litify_pm__RepeatThisTask__c' },
+  { api:'litify_pm__Matter_Stage_Switch__c', pkg:'managed', label:'Matter Stage Switch', purpose:'Plan + stage pair used when a matter switches plans mid-stream — maps which stage the matter lands on in the target plan. We also use the term for the operational stage-transition rules below.', fields:'litify_pm__Matter_Plan__c · litify_pm__Matter_Stage__c · litify_pm__Matter_Plan_Name__c' },
+  { api:'litify_pm__Matter__c', pkg:'managed', label:'Matter', purpose:'The matter. Its litify_pm__Matter_Stage_Activity__c lookup IS the current stage — a stage switch is a repoint of this lookup. 450 fields in a typical org.', fields:'litify_pm__Matter_Plan__c · litify_pm__Matter_Stage_Activity__c (current stage) · litify_pm__Matter_Stage_Activity_Formula__c (Active Stage name) · litify_pm__Status__c · litify_pm__Open_Date__c / litify_pm__Closed_Date__c · litify_pm__Principal_Attorney__c · litify_pm__Ignore_Default_Plan__c · litify_pm__Starting_Matter_Stage_Override__c · litify_pm__Docket_Number__c · litify_pm__Court__c' },
+  { api:'litify_pm__Matter_Stage_Activity__c', pkg:'managed', label:'Matter Stage Activity (instance)', purpose:'One record per template stage, stamped onto the matter when the plan applies. Label in-org is simply "Stage". Holds live stage state.', fields:'litify_pm__Matter__c (master) · litify_pm__Original_Matter_Stage__c (template back-pointer) · litify_pm__Order__c · litify_pm__Stage_Status__c · litify_pm__Set_As_Active_At__c · litify_pm__Guidance_for_success__c (copied)' },
+  { api:'Task', pkg:'standard', label:'Task (standard object)', purpose:'Litify does NOT use a custom task object. Generated tasks are standard Tasks pinned to the matter and to the specific stage activity. Org picklist adds Status values like "N/A" for swept tasks.', fields:'litify_pm__Matter__c · litify_pm__Matter_Stage_Activity__c · Status (Open / Completed / N/A) · ActivityDate · OwnerId (resolved from team role)' },
+  { api:'litify_pm__Matter_Team_Member__c / litify_pm__Matter_Team_Role__c', pkg:'managed', label:'Matter Team', purpose:'Role-based assignment: Default Matter Tasks point at a Team Role; the matter team resolves it to a user. Roles for this build: Intake Specialist, Paralegal, Associate Attorney, Partner, Handling Attorney, Finance.', fields:'litify_pm__Default_Matter_Team__c + Members apply on create' },
+  { api:'litify_pm__Intake__c', pkg:'managed', label:'Intake', purpose:'Stages 1–2 run here before conversion. Conversion stamps litify_pm__Matter__c and creates the Matter with plan applied.', fields:'litify_pm__Status__c · litify_pm__Qualified__c · litify_pm__IsConverted__c · litify_pm__Retainer_Agreement_Signed__c · UTM/source fields' },
+  { api:'litify_pm__Role__c', pkg:'managed', label:'Role (party model)', purpose:'THE cotenancy ledger. One Role per co-owner: litify_pm__Party__c → Account, Role = "Cotenant". Custom fields carry fractional interest and contribution rollups.', fields:'litify_pm__Party__c · litify_pm__Matter__c · litify_pm__Role__c picklist · litify_pm__Parent_Role__c + Fractional_Interest__c (custom) · Opening_Contributions__c (custom)' },
+  { api:'litify_pm__Time_Entry__c', pkg:'managed', label:'Time Entry', purpose:'Timekeeping. THE partition-critical custom: Common_Benefit__c (Y / N / Mixed) tagged at entry — § 874.040 fee recovery is forfeited without it. Validation rule blocks save when blank.', fields:'litify_pm__Matter__c · litify_pm__Task_Type__c · litify_pm__Team_Member__c + Common_Benefit__c (CUSTOM, required)' },
+  { api:'litify_pm__Expense__c / litify_pm__Negotiation__c / litify_pm__Resolution__c', pkg:'managed', label:'Money objects', purpose:'Expenses feed the accounting schedule (Stage 9). Negotiation tracks demand/counter rounds (Stage 3). Resolution + Resolution Split + Disbursement carry settlement and distribution (Stages 8–11).', fields:'litify_pm__Matter__c lookups throughout · litify_pm__Payor__c · litify_pm__Negotiating_with__c → Role' },
+  { api:'Lis_Pendens__c', pkg:'custom', label:'Lis Pendens (custom object)', purpose:'One record per county recording: county, instrument #, recorded date, § 405.22 certified-mail proof, released date. Drives the Stage 4 record-everywhere automation and the Stage 11 release-everywhere sweep.', fields:'Matter__c · County__c · Instrument_Number__c · Recorded_Date__c · Service_Proof__c · Released_Date__c' },
+  { api:'litify_pm__COI_Search__c / litify_pm__COI_Search_Result__c', pkg:'managed', label:'Conflicts', purpose:'Multi-party conflict checks across all named co-owners at intake (Stage 1 gate).', fields:'Search per party · results reviewed by Paralegal' }
+];
+
+// ============================================================
+// STAGE SWITCH RULES (operational transitions)
+// ============================================================
+const SWITCH_RULES = [
+  { from:'2. Consultation', trigger:'Retain / Decline / Refer-Out gateway', yes:'Intake converts → Matter created, plan applied, Stage 3 activates', no:'Matter never opens — Intake → Turned Down / Referred (Closed: Withdrawn if matter existed)' },
+  { from:'3. Pre-Lit Demand', trigger:'Settlement window gateway (14–21 days)', yes:'Settles → switch direct to Stage 11 Closeout · Closed: Settled', no:'Switch to Stage 4 Pleadings' },
+  { from:'5. Discovery', trigger:'PRPA applicability (§ 874.313)', yes:'Switch to Stage 6 PRPA Track', no:'Skip Stage 6 → switch to Stage 7 Interlocutory Judgment' },
+  { from:'6. PRPA Track', trigger:'Buyout election + 60-day funding (§ 874.317)', yes:'Buyout closes → switch to Stage 11 · Closed: Settled', no:'Switch to Stage 7 (or PRPA open-market sale → Stage 9)' },
+  { from:'8. Manner of Partition', trigger:'Sale-or-in-kind gateway (per IJ)', yes:'Sale track: listing → confirmation → escrow', no:'In-kind track: survey → division → court confirmation' },
+  { from:'9. Accounting', trigger:'Settle-or-try-offsets gateway (§ 872.140)', yes:'Stipulated accounting (modal) → Stage 10', no:'Short-cause trial on offsets → Stage 10' }
+];
+
+// ============================================================
+// PLAN TEMPLATE EXPORT (Litify API shape)
+// ============================================================
+function buildPlanExport() {
+  const stages = STAGES.filter(s => s.id !== 'overview');
+  return {
+    'litify_pm__Matter_Plan__c': { Name: PLAN.name, 'litify_pm__Case_Type__r.Name': PLAN.caseType },
+    'litify_pm__Matter_Stage__c': stages.map((s, i) => ({
+      Name: s.name.replace(/^\d+\.\s*/, ''),
+      'litify_pm__Stage_Order__c': i + 1,
+      'litify_pm__Guidance_for_success__c': STAGE_META[s.id].exitGate,
+      'litify_pm__Tasks__c': (TASKS[s.id] || []).length
+    })),
+    'litify_pm__Default_Matter_Task__c': stages.flatMap((s, i) => (TASKS[s.id] || []).map(t => ({
+      Name: t.name,
+      Stage: s.name.replace(/^\d+\.\s*/, ''),
+      'litify_pm__Matter_Team_Role__r.Name': TEAM_ROLE[t.role],
+      'litify_pm__Due_Date_Type__c': /Stage start|Real-time|On |Continuous/.test(t.due) ? 'Days After Stage Activation' : (/^#\d/.test(t.due) ? 'Dependent on Task' : 'Manual / Court-Driven'),
+      Due_Trigger: t.due,
+      Depends_On: t.deps,
+      Kind: t.kind || (t.role === 'Litify Auto' ? 'automation' : 'task'),
+      Exit_Gate: !!t.gate,
+      Authority: t.cite || null,
+      Description: t.detail
+    }))),
+    'Stage_Switch_Rules': SWITCH_RULES
+  };
+}
+function downloadPlanJSON() {
+  const blob = new Blob([JSON.stringify(buildPlanExport(), null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'Talkov_Partition_MatterPlan_Litify.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+// ============================================================
+// NODE DETAIL CATALOG
+// ============================================================
+const EXTRA_DETAILS = [
+  { match:['PRPA Track','PRPA Applies','§ 874.313','10/30/45/60'], role:'dec', title:'PRPA — Partition of Real Property Act', desc:'CCP §§ 874.311–874.323 (AB 2245, eff. 1/1/2023). Applies to CA real property held in TIC without a written partition agreement, filed on/after 1/1/2023. Court runs four cascading clocks — 10-day FMV notice, 30-day objection hearing, 45-day buyout election, 60-day funding — before the classic partition track engages. Modeled as a conditional stage with its own switch rules.' },
+  { match:['Buyout?','Cotenant Buyout'], role:'dec', title:'Cotenant Buyout Right (§ 874.317)', desc:'Any non-partitioning cotenant has 45 days from the court\'s notice to elect to buy the partitioning cotenant\'s interest at appraised FMV × fractional share. Multiple electors share pro rata. Election opens a 60-day funding window. If the buyout funds, the matter switches directly to Closeout — Closed: Settled.' },
+  { match:['Retain?','Retain · Decline'], role:'dec', title:'Gateway · Retain / Decline / Refer Out', desc:'Attorney disposition after consultation. Keep → engagement letter + Intake-to-Matter conversion (plan auto-applies via Case Type). Decline or refer to a non-partition firm → intake closes, no matter created.' },
+  { match:['Settle pre-suit','Settle within','Settlement window'], role:'dec', title:'Gateway · Pre-Suit Settlement', desc:'Demand letter citing LEG Investments v. Boxler opens a 14–21 day window. If defendants settle, the matter switches directly to Stage 11 and closes as Closed: Settled — skipping litigation entirely.' },
+  { match:['Sale or'], role:'dec', title:'Gateway · Sale or In-Kind', desc:'Modal outcome is sale by referee with court confirmation (incl. § 873.740 overbid). In-kind division is rare — mostly raw land — and only where division would not cause great prejudice. By-appraisal requires stipulation of all cotenants (Cummings v. Dessel).' },
+  { match:['Overbid','§ 873.740'], role:'sys', title:'Overbid Procedure (§ 873.740)', desc:'At the confirmation hearing the court can accept a higher bid from anyone present: minimum 10% over the first $10,000 plus 5% over the balance. Easy to automate, easy to get wrong by hand — built as a formula on the confirmation task.' },
+  { match:['Common-Benefit','Tag time entries','874.040'], role:'sys', title:'Common-Benefit Tagging (§ 874.040)', desc:'Fees expended for the common benefit are recoverable as costs of partition, paid from proceeds before distribution. Recovery only realizes if every litify_pm__Time_Entry__c is tagged Common_Benefit__c = Y / N / Mixed AT ENTRY — a validation rule blocks untagged saves. Industry tag rate ~40%; this build targets 100%.' },
+  { match:['Lis Pendens'], role:'sys', title:'Lis Pendens — record + release everywhere', desc:'§ 872.250 makes recording mandatory "immediately upon" filing, in every county where any parcel sits, served by certified mail per § 405.22. Defective service is the #1 expungement ground (§ 405.38 fee shift). Custom Lis_Pendens__c object tracks each county recording; Stage 11 automation blocks closeout until every record shows a Released_Date__c.' },
+  { match:['Referee'], role:'ext', title:'Partition Referee (§ 873.010)', desc:'Court-appointed officer who runs the partition — often a real-estate attorney or broker. Powers under § 873.060: retain broker, list, accept offers subject to confirmation, prevent waste, collect rents. Oath within 10 days; bond at court discretion; discharged at final account.' },
+  { match:['Matter Created','Intake → Matter','Conversion'], role:'sys', title:'Intake → Matter Conversion', desc:'On engagement signature, litify_pm__Intake__c converts: litify_pm__Matter__c created, Case Type = Partition matches the Matter Plan, stage activities instantiate, Stage 3 becomes active (or Starting_Matter_Stage_Override__c), default matter team applies, and Stage 3 default tasks generate.' },
+  { match:['Closed: Withdrawn','Closed: Settled','Closed: Completed','Closure'], role:'sys', title:'Closure Statuses', desc:'litify_pm__Status__c closure reasons: Closed: Completed (full partition through judgment), Closed: Settled (pre-suit, discovery, or PRPA buyout), Closed: Stipulated (stipulated dismissal/accounting), Closed: Withdrawn (decline/refer-out).' }
+];
+
+function findNodeDetail(label) {
+  const lower = label.toLowerCase();
+  for (const d of EXTRA_DETAILS) for (const m of d.match) if (lower.includes(m.toLowerCase())) return d;
+  for (const sid of Object.keys(TASKS)) for (const t of TASKS[sid]) {
+    const probe = t.name.toLowerCase().slice(0, 18);
+    if (probe && lower.includes(probe)) {
+      return { role: t.role, title: t.name, desc: t.detail + (t.cite ? ' — Authority: ' + t.cite : ''), isTask: true, due: t.due, deps: t.deps };
+    }
+  }
+  return null;
+}
+
+const PANEL_ROLE_STYLE = {
+  'Intake':{label:'Intake',color:'var(--role-intake)'}, 'Paralegal':{label:'Paralegal',color:'var(--role-paralegal)'},
+  'Associate':{label:'Associate',color:'var(--role-associate)'}, 'Partner':{label:'Partner',color:'var(--role-partner)'},
+  'Attorney':{label:'Attorney',color:'var(--role-attorney)'}, 'Litify Auto':{label:'Litify Auto',color:'var(--role-system)'},
+  'External':{label:'External',color:'var(--role-external)'}, 'Finance/CPA':{label:'Finance',color:'var(--role-finance)'},
+  'All Timekeepers':{label:'All Timekeepers',color:'var(--role-timekeepers)'},
+  'dec':{label:'Gateway',color:'var(--role-decision)'}, 'sys':{label:'Litify Auto',color:'var(--role-system)'},
+  'ext':{label:'External',color:'var(--role-external)'}
+};
+
+function openPanel(label) {
+  const d = findNodeDetail(label);
+  const roleStyle = d ? (PANEL_ROLE_STYLE[d.role] || {label:'Detail',color:'var(--acs-muted)'}) : {label:'Detail',color:'var(--acs-muted)'};
+  document.getElementById('panelRole').textContent = roleStyle.label;
+  document.getElementById('panelRole').style.background = roleStyle.color;
+  if (!d) {
+    document.getElementById('panelTitle').textContent = label;
+    document.getElementById('panelBody').innerHTML = '<p style="color:var(--acs-muted)">No additional detail recorded for this node. See the task table for roles and dependencies.</p>';
+  } else {
+    document.getElementById('panelTitle').textContent = d.title;
+    let body = '<h4>Description</h4><p>' + d.desc + '</p>';
+    if (d.isTask) body += '<h4>Due / Trigger</h4><p>' + d.due + '</p><h4>Depends On</h4><p>' + d.deps + '</p><h4>Litify shape</h4><p>Standard <code>Task</code> pinned to <code>litify_pm__Matter__c</code> + <code>litify_pm__Matter_Stage_Activity__c</code>, generated from <code>litify_pm__Default_Matter_Task__c</code> on stage activation.</p>';
+    document.getElementById('panelBody').innerHTML = body;
+  }
+  document.getElementById('panel').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closePanel() {
+  document.getElementById('panel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+function attachNodePanels(rootId) {
+  document.querySelectorAll('#' + rootId + ' .node').forEach(n => {
+    n.style.cursor = 'pointer';
+    n.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const labelEl = n.querySelector('.nodeLabel, foreignObject div, foreignObject span');
+      const text = (labelEl ? labelEl.textContent : n.textContent) || '';
+      const cleaned = text.replace(/\s+/g, ' ').trim();
+      if (cleaned) openPanel(cleaned);
+    });
+  });
+}
+
+// ============================================================
+// RENDER — workflow view
+// ============================================================
+let currentView = 'workflow';
+let currentStage = 'overview';
+let zoomLevel = 1.0;
+
+const VIEWS = [
+  { id:'workflow', name:'Matter Plan Workflow' },
+  { id:'model', name:'Litify Object Model' },
+  { id:'template', name:'Plan Template (Config)' }
+];
+
+function buildViewBar() {
+  const bar = document.getElementById('paBar');
+  bar.innerHTML = '';
+  const lbl = document.createElement('span'); lbl.className = 'pa-section'; lbl.textContent = 'Views'; bar.appendChild(lbl);
+  VIEWS.forEach(v => {
+    const b = document.createElement('div');
+    b.className = 'pa-pill' + (v.id === currentView ? ' active' : '');
+    b.textContent = v.name;
+    b.onclick = () => { currentView = v.id; render(); };
+    bar.appendChild(b);
+  });
+  const div = document.createElement('span'); div.className = 'pa-divider'; bar.appendChild(div);
+  const note = document.createElement('span'); note.className = 'pa-section';
+  note.textContent = 'Case Type: Partition · Plan: ' + PLAN.name;
+  bar.appendChild(note);
+}
+
+function buildSummary() {
+  document.getElementById('summary').innerHTML = `
+    <div><h2>${PLAN.name}</h2><div class="sub">Target State · 11-Stage Litify Matter Plan</div></div>
+    <div><div class="sub">Stakeholders</div><div class="val">${PLAN.stakeholders}</div></div>
+    <div><div class="sub">Typical Duration</div><div class="val">${PLAN.duration}</div></div>
+    <div><div class="sub">Key Decision Drivers</div><div class="val">${PLAN.drivers}</div></div>`;
+}
+
+function buildStageNav() {
+  const nav = document.getElementById('stageNav');
+  nav.innerHTML = '';
+  STAGES.forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'stage-btn' + (s.id === currentStage ? ' active' : '') + (s.conditional ? ' conditional' : '');
+    b.textContent = s.name + (s.conditional ? ' ◆' : '');
+    b.title = s.conditional ? 'Conditional stage — only if PRPA applies (§ 874.313)' : '';
+    b.onclick = () => { currentStage = s.id; renderStage(); };
+    nav.appendChild(b);
+  });
+  const sp = document.createElement('div'); sp.className = 'spacer'; nav.appendChild(sp);
+  const pv = document.createElement('button'); pv.className = 'nav-btn'; pv.textContent = '◀ Prev'; pv.onclick = navPrev; nav.appendChild(pv);
+  const nx = document.createElement('button'); nx.className = 'nav-btn'; nx.textContent = 'Next ▶'; nx.onclick = navNext; nav.appendChild(nx);
+  const ht = document.createElement('span'); ht.className = 'hint'; ht.textContent = 'Keys: [ ] · Esc'; nav.appendChild(ht);
+}
+function navPrev() { const i = STAGES.findIndex(x => x.id === currentStage); if (i > 0) { currentStage = STAGES[i-1].id; renderStage(); } }
+function navNext() { const i = STAGES.findIndex(x => x.id === currentStage); if (i < STAGES.length-1) { currentStage = STAGES[i+1].id; renderStage(); } }
+
+function roleBadge(role) { return `<span class="role-tag" style="background:${ROLE_COLOR[role] || 'var(--acs-muted)'}">${role}</span>`; }
+function taskKind(t) { return t.kind || (t.role === R.sys ? 'automation' : 'task'); }
+function kindBadge(kind) {
+  const label = { task:'Task', automation:'Automation', gateway:'Gateway' }[kind] || 'Task';
+  return `<span class="kind-tag kind-${kind}">${label}</span>`;
+}
+
+function renderTaskTable() {
+  const section = document.getElementById('taskSection');
+  if (currentStage === 'overview') {
+    section.innerHTML = `<h3>Partition Matter Plan — Stage Map</h3>
+      <div class="sub">11-stage Litify matter plan. Most matters resolve at the pre-suit demand window or the PRPA buyout and skip later stages. The PRPA Track (◆) is conditional — it only activates when the court finds §§ 874.311–874.323 applies. Select a stage above to see the default tasks, roles, due-date triggers, and stage switches.</div>
+      <div class="switch-box"><h4>How stage switches work in Litify</h4>
+      <ul>
+        <li>The matter's current stage is the <span class="api">litify_pm__Matter_Stage_Activity__c</span> lookup on <span class="api">litify_pm__Matter__c</span> — a stage switch is a repoint of that lookup.</li>
+        <li>On switch, a record-triggered flow detects <span class="api">IsChanged</span> on the lookup, stamps <span class="api">Set_As_Active_At__c</span>, sweeps still-open Tasks from other stages to Status = N/A, and generates the new stage's tasks from <span class="api">litify_pm__Default_Matter_Task__c</span>.</li>
+        <li>Branch switches (settle pre-suit, PRPA, buyout) jump non-linearly — see each stage's switch panel and the Plan Template view for the full rule set.</li>
+      </ul></div>`;
+    return;
+  }
+  const tasks = TASKS[currentStage] || [];
+  const meta = STAGE_META[currentStage];
+  const stageMeta = STAGES.find(s => s.id === currentStage);
+  const counts = { task:0, automation:0, gateway:0 };
+  tasks.forEach(t => counts[taskKind(t)]++);
+  const gates = tasks.filter(t => t.gate).length;
+  let html = `<h3>${stageMeta.name} — Default Matter Tasks</h3>
+    <div class="sub">${meta.days} · ${meta.owners}${meta.statute ? ' · ' + meta.statute : ''} · ${tasks.length} tasks instantiate on stage activation · gold-flagged tasks gate the stage switch</div>`;
+  html += '<table class="task-table"><thead><tr><th style="width:36px">#</th><th>Step</th><th style="width:110px">Kind</th><th style="width:130px">Role</th><th style="width:170px">Due / Trigger</th><th style="width:110px">Depends On</th></tr></thead><tbody>';
+  tasks.forEach(t => {
+    const kind = taskKind(t);
+    const classes = [];
+    if (kind === 'automation') classes.push('row-automation');
+    if (kind === 'gateway') classes.push('row-gateway');
+    const flags = (t.gate ? '<span class="gate-flag">Gate</span>' : '') + (t.crit ? '<span class="crit-flag">Critical</span>' : '') + (t.cite ? `<span class="cite">${t.cite}</span>` : '');
+    html += `<tr class="${classes.join(' ')}"><td class="num">${t.n}</td><td><strong>${t.name}</strong>${flags}<span class="detail">${t.detail}</span></td><td>${kindBadge(kind)}</td><td>${roleBadge(t.role)}</td><td>${t.due}</td><td class="deps">${t.deps}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  html += `<div class="task-summary"><span><strong>${counts.task}</strong> manual task${counts.task===1?'':'s'}</span><span><strong>${counts.automation}</strong> automation${counts.automation===1?'':'s'}</span><span><strong>${counts.gateway}</strong> gateway${counts.gateway===1?'':'s'}</span><span><strong>${gates}</strong> exit-gate task${gates===1?'':'s'}</span></div>`;
+  html += `<div class="switch-box"><h4>Stage switch — exit gate (litify_pm__Guidance_for_success__c)</h4>
+    <ul><li>${meta.exitGate}</li></ul>
+    <div class="mech">Switch mechanics: repoint litify_pm__Matter__c.litify_pm__Matter_Stage_Activity__c → flow sweeps open tasks to N/A → next stage's Default Matter Tasks instantiate.</div></div>`;
+  section.innerHTML = html;
+}
+
+function renderNextStage() {
+  const wrap = document.getElementById('nextStage');
+  wrap.classList.remove('terminal');
+  if (currentStage === 'overview') {
+    wrap.innerHTML = '<span class="label">Begin at</span><button onclick="goStage(\'intake\')">1. Intake &amp; Qualification <span class="arrow">→</span></button>';
+    return;
+  }
+  const meta = STAGE_META[currentStage];
+  if (!meta.switches.length) {
+    wrap.classList.add('terminal');
+    wrap.innerHTML = '<span class="label">End of plan</span><button disabled>Matter Closed: Completed <span class="arrow">●</span></button>';
+    return;
+  }
+  let html = '<span class="label">Stage switch</span>';
+  meta.switches.forEach(sw => {
+    if (sw.to) html += `<button class="${sw.primary ? '' : 'alt'}" onclick="goStage('${sw.to}')">${sw.label} <span class="arrow">→</span></button>`;
+    else html += `<button class="alt" disabled>${sw.label}</button>`;
+  });
+  wrap.innerHTML = html;
+}
+function goStage(id) { currentStage = id; renderStage(); }
+
+async function renderMermaidInto(elId, code) {
+  const el = document.getElementById(elId);
+  el.removeAttribute('data-processed');
+  el.innerHTML = '';
+  const id = 'g_' + Math.random().toString(36).slice(2, 8);
+  try {
+    const { svg, bindFunctions } = await mermaid.render(id, code);
+    el.innerHTML = svg;
+    if (bindFunctions) bindFunctions(el);
+  } catch (e) {
+    el.innerHTML = '<pre style="color:#C0392B;padding:20px;white-space:pre-wrap">Mermaid error: ' + (e.message || e) + '</pre>';
+  }
+}
+
+async function renderStage() {
+  buildStageNav();
+  await renderMermaidInto('mermaidStage', buildDiagram(currentStage));
+  attachNodePanels('mermaidStage');
+  applyZoom();
+  renderNextStage();
+  renderTaskTable();
+}
+
+// ============================================================
+// RENDER — object model view
+// ============================================================
+async function renderModelView() {
+  const v = document.getElementById('modelView');
+  let html = `<section class="model-section">
+    <h3>Litify Object Model — Partition Matter Plans</h3>
+    <div class="sub">Verified against a live Litify org describe (Matter-Plan-Analyzer · litify_pm v66 schema). Blue = litify_pm managed · Gray = Salesforce standard · Gold = partition-specific. Click nodes for detail.</div>
+    <div class="canvas-wrap"><div class="canvas-controls">
+      <button onclick="zoomM(-0.1)" title="Zoom out">−</button><span class="zoom-value" id="zoomValM">100%</span>
+      <button onclick="zoomM(0.1)" title="Zoom in">+</button><button onclick="zoomFitM()" title="Reset">⤢</button></div>
+    <div class="mermaid-stage" id="mermaidModel"></div></div>
+  </section>
+  <section class="model-section">
+    <h3>Object Reference</h3>
+    <div class="sub">Template chain: Matter_Plan → Matter_Stage → Default_Matter_Task. Instance chain: Matter → Matter_Stage_Activity → Task (standard). There is no litify_pm__Matter_Task__c and no litify_pm__Default_Matter_Plan__c — common naming traps.</div>
+    <table class="obj-table"><thead><tr><th style="width:300px">Object</th><th style="width:90px">Source</th><th>Purpose in the partition build</th><th style="width:340px">Key fields</th></tr></thead><tbody>`;
+  MODEL_OBJECTS.forEach(o => {
+    html += `<tr><td><code>${o.api}</code><br/><strong style="font-size:12px">${o.label}</strong></td>
+      <td><span class="pkg ${o.pkg}">${o.pkg === 'managed' ? 'litify_pm' : o.pkg}</span></td>
+      <td>${o.purpose}</td><td style="font-size:11.5px; line-height:1.7">${o.fields}</td></tr>`;
+  });
+  html += `</tbody></table></section>
+  <section class="model-section">
+    <h3>Stage Switch Rules — operational transitions</h3>
+    <div class="sub">A stage switch = repoint of litify_pm__Matter__c.litify_pm__Matter_Stage_Activity__c. Record-triggered flow (after-save, IsChanged on the lookup) stamps the date, sweeps open tasks of other stages to Status = N/A, and instantiates the target stage's Default Matter Tasks. Branch rules below; cross-plan landing handled by litify_pm__Matter_Stage_Switch__c.</div>
+    <table class="obj-table"><thead><tr><th style="width:190px">From stage</th><th style="width:280px">Gateway / trigger</th><th>If yes</th><th>If no</th></tr></thead><tbody>`;
+  SWITCH_RULES.forEach(r => { html += `<tr><td><strong>${r.from}</strong></td><td>${r.trigger}</td><td>${r.yes}</td><td>${r.no}</td></tr>`; });
+  html += `</tbody></table></section>`;
+  v.innerHTML = html;
+  await renderMermaidInto('mermaidModel', objectModelDiagram());
+  attachNodePanels('mermaidModel');
+  applyZoomM();
+}
+
+// ============================================================
+// RENDER — plan template view
+// ============================================================
+function renderTemplateView() {
+  const v = document.getElementById('templateView');
+  const stages = STAGES.filter(s => s.id !== 'overview');
+  const totalTasks = stages.reduce((n, s) => n + (TASKS[s.id] || []).length, 0);
+  let html = `<section class="model-section">
+    <h3>Plan Template — load-ready Litify configuration</h3>
+    <div class="sub">Everything below maps 1:1 to Litify records: one Matter Plan, ${stages.length} Matter Stages, ${totalTasks} Default Matter Tasks, plus the stage-switch automation spec. Use the export for data-load prep.</div>
+    <div class="plan-card">
+      <h4>litify_pm__Matter_Plan__c</h4>
+      <div class="grid">
+        <div><div class="lbl">Name</div>${PLAN.name}</div>
+        <div><div class="lbl">litify_pm__Case_Type__c</div>Partition</div>
+        <div><div class="lbl">Stages / Tasks</div>${stages.length} stages · ${totalTasks} default tasks</div>
+        <div><div class="lbl">Applied</div>Automatically on Matter create via Case Type match (unless Ignore_Default_Plan__c)</div>
+      </div>
+      <div style="margin-top:14px"><button class="export-btn" onclick="downloadPlanJSON()">⬇ Export plan JSON (Litify API shape)</button></div>
+    </div>`;
+  stages.forEach((s, i) => {
+    const meta = STAGE_META[s.id];
+    const tasks = TASKS[s.id] || [];
+    html += `<div class="stage-block">
+      <h4>Stage ${i+1} · ${s.name.replace(/^\d+\.\s*/, '')}${s.conditional ? ' ◆ conditional' : ''} <span style="font-weight:400; color:var(--acs-muted); font-size:11.5px">· litify_pm__Stage_Order__c = ${i+1} · ${meta.days}</span></h4>
+      <div class="guidance"><strong>Guidance for success (exit gate):</strong> ${meta.exitGate}</div>
+      <table class="obj-table"><thead><tr><th style="width:30px">#</th><th>litify_pm__Default_Matter_Task__c</th><th style="width:150px">Team role</th><th style="width:185px">Due-date engine config</th><th style="width:95px">Kind</th></tr></thead><tbody>`;
+    tasks.forEach(t => {
+      const kind = taskKind(t);
+      const dueType = /Stage start|Real-time|^On |Continuous/.test(t.due) ? 'Days After Stage Activation' : (/^#\d/.test(t.due) ? 'Dependent on Task (Due_Date_Default_Matter_Task__c)' : 'Manual / court-driven');
+      html += `<tr><td class="num" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--acs-muted)">${t.n}</td>
+        <td><strong style="font-size:12px">${t.name}</strong>${t.gate ? '<span class="gate-flag">Gate</span>' : ''}${t.crit ? '<span class="crit-flag">Critical</span>' : ''}${t.cite ? `<span class="cite">${t.cite}</span>` : ''}<span class="detail" style="display:block; font-size:11.5px; color:var(--acs-muted); margin-top:1px">${t.detail}</span></td>
+        <td style="font-size:11.5px">${TEAM_ROLE[t.role]}</td>
+        <td style="font-size:11px"><span class="api" style="white-space:normal">${dueType}</span><br/><span style="color:var(--acs-muted)">${t.due}</span></td>
+        <td>${kindBadge(kind)}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+  });
+  html += `<div class="plan-card" style="border-top-color: var(--acs-gold)">
+    <h4>Stage-switch automation spec (record-triggered flow on litify_pm__Matter__c)</h4>
+    <div class="grid" style="grid-template-columns: 1fr">
+      <div><div class="lbl">Trigger</div>After-save · <span class="api">$Record.litify_pm__Matter_Stage_Activity__c IsChanged = true</span> OR <span class="api">litify_pm__Matter_Plan__c IsChanged</span> OR new Matter with stage populated</div>
+      <div><div class="lbl">Step 1 — stamp</div>Set <span class="api">Set_As_Active_At__c</span> on the new active Stage Activity; update <span class="api">Stage_Status__c</span>; stamp custom <span class="api">Stage_Date__c</span> on Matter for cycle-time reporting</div>
+      <div><div class="lbl">Step 2 — sweep</div>Mass-update Tasks where <span class="api">litify_pm__Matter__c = $Record.Id</span> AND <span class="api">Status = Open</span> AND <span class="api">litify_pm__Matter_Stage_Activity__c ≠ new stage</span> → <span class="api">Status = N/A</span></div>
+      <div><div class="lbl">Step 3 — instantiate</div>Generate the new stage's tasks from <span class="api">litify_pm__Default_Matter_Task__c</span> (invocable: default_task_Id · matter_id · start_date); owner resolved from <span class="api">litify_pm__Matter_Team_Member__c</span> by role</div>
+      <div><div class="lbl">Step 4 — branch guards</div>PRPA skip (Stage 5 → 7), settle-early jumps (Stage 3/6 → 11 + Status = Closed: Settled), decline path (Stage 2 → Closed: Withdrawn), and closeout block until every <span class="api">Lis_Pendens__c</span> shows Released_Date__c</div>
+      <div><div class="lbl">Cross-plan switches</div><span class="api">litify_pm__Matter_Stage_Switch__c</span> records (plan + stage pair) define the landing stage if a matter is moved onto a different plan mid-stream</div>
+    </div>
+  </div>
+  <div class="plan-card" style="border-top-color: var(--acs-gold)">
+    <h4>Partition-specific customizations (beyond litify_pm)</h4>
+    <div class="grid" style="grid-template-columns: 1fr 1fr">
+      <div><div class="lbl">Common_Benefit__c (Y/N/Mixed)</div>Required picklist on <span class="api">litify_pm__Time_Entry__c</span> + validation rule — § 874.040 fee recovery engine</div>
+      <div><div class="lbl">Lis_Pendens__c</div>Custom object: county · instrument # · recorded date · § 405.22 proof · released date; record + release sweeps</div>
+      <div><div class="lbl">Fractional_Interest__c / Opening_Contributions__c</div>On <span class="api">litify_pm__Role__c</span> — the cotenancy ledger (Role = Cotenant per co-owner)</div>
+      <div><div class="lbl">Overbid calculator</div>Formula on confirmation task: 10% over first $10K + 5% over balance (§ 873.740)</div>
+      <div><div class="lbl">PRPA clock engine</div>Scheduled paths for the 10 / 30 / 45 / 60-day deadlines on Stage 6 tasks</div>
+      <div><div class="lbl">Referee tracking</div><span class="api">litify_pm__Role__c</span> = Referee + oath/bond/discharge task gates</div>
+    </div>
+  </div></section>`;
+  v.innerHTML = html;
+}
+
+// ============================================================
+// VIEW SWITCH + ZOOM + KEYS
+// ============================================================
+function render() {
+  buildViewBar();
+  document.getElementById('workflowView').style.display = currentView === 'workflow' ? '' : 'none';
+  document.getElementById('modelView').style.display = currentView === 'model' ? '' : 'none';
+  document.getElementById('templateView').style.display = currentView === 'template' ? '' : 'none';
+  if (currentView === 'workflow') { buildSummary(); renderStage(); }
+  if (currentView === 'model') renderModelView();
+  if (currentView === 'template') renderTemplateView();
+}
+
+function zoom(d) { zoomLevel = Math.max(0.5, Math.min(2.0, zoomLevel + d)); applyZoom(); }
+function zoomFit() { zoomLevel = 1.0; applyZoom(); }
+function applyZoom() {
+  const el = document.getElementById('mermaidStage');
+  if (el) el.style.transform = `scale(${zoomLevel})`;
+  const zv = document.getElementById('zoomVal');
+  if (zv) zv.textContent = Math.round(zoomLevel * 100) + '%';
+}
+let zoomLevelM = 1.0;
+function zoomM(d) { zoomLevelM = Math.max(0.5, Math.min(2.0, zoomLevelM + d)); applyZoomM(); }
+function zoomFitM() { zoomLevelM = 1.0; applyZoomM(); }
+function applyZoomM() {
+  const el = document.getElementById('mermaidModel');
+  if (el) el.style.transform = `scale(${zoomLevelM})`;
+  const zv = document.getElementById('zoomValM');
+  if (zv) zv.textContent = Math.round(zoomLevelM * 100) + '%';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closePanel();
+  if (currentView === 'workflow') {
+    if (e.key === '[') navPrev();
+    if (e.key === ']') navNext();
+  }
+});
+
+render();
+</script>
+</body>
+</html>
