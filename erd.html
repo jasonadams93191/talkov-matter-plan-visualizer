@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Talkov Law — Litify Data Model ERD | Advocate Cloud Solutions</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Lato:wght@300;400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --acs-blue: #0057B8; --acs-dark-blue: #003D80; --acs-light-blue: #E8F0FE;
+    --acs-gold: #FFD700; --acs-silver: #ADADAD; --acs-charcoal: #1A1A1A;
+    --acs-bg: #F5F7FB; --acs-muted: #5A6276; --acs-line: #E4E7EE;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: 'Lato', Helvetica, Arial, sans-serif; color: var(--acs-charcoal); background: var(--acs-bg); }
+  h1, h2, h3 { font-family: 'Montserrat', Arial, sans-serif; }
+  header.brand { background: linear-gradient(135deg, var(--acs-dark-blue) 0%, var(--acs-blue) 100%); color: #fff; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+  header.brand h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  header.brand .sub { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+  header.brand .acs-mark { font-weight: 700; font-size: 11px; letter-spacing: 1.5px; opacity: 0.9; text-align: right; }
+  header.brand .acs-mark .tag { display: block; color: var(--acs-gold); font-weight: 400; letter-spacing: 0.5px; font-size: 10px; margin-top: 2px; }
+  .intro { background: #fff; border-bottom: 1px solid var(--acs-line); padding: 16px 32px; font-size: 13px; color: var(--acs-muted); line-height: 1.6; }
+  .intro strong { color: var(--acs-charcoal); }
+  .intro .api { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--acs-light-blue); color: var(--acs-dark-blue); padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
+  .section { background: #fff; border-bottom: 1px solid var(--acs-line); padding: 20px 32px; }
+  .section h2 { margin: 0 0 4px; font-size: 15px; color: var(--acs-blue); }
+  .section .sub { font-size: 12px; color: var(--acs-muted); margin-bottom: 12px; }
+  .canvas-wrap { position: relative; background: #fff; overflow: auto; border: 1px solid var(--acs-line); border-radius: 8px; }
+  .canvas-controls { position: sticky; top: 12px; float: right; margin: 12px 12px 0 0; background: #fff; border: 1px solid var(--acs-line); border-radius: 8px; padding: 6px; display: inline-flex; gap: 4px; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .canvas-controls button { border: 0; background: var(--acs-bg); width: 30px; height: 30px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+  .canvas-controls button:hover { background: var(--acs-blue); color: #fff; }
+  .zoom-value { min-width: 44px; text-align: center; font-size: 11px; color: var(--acs-muted); padding: 7px 0; font-family: 'JetBrains Mono', monospace; }
+  .mermaid-stage { padding: 24px; transform-origin: top left; transition: transform 100ms; }
+  .mermaid-stage svg { max-width: none !important; height: auto !important; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 11.5px; color: var(--acs-muted); padding: 12px 0 0; }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .legend .swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--acs-line); }
+  .note { margin-top: 12px; border: 1px solid var(--acs-line); border-left: 4px solid var(--acs-gold); border-radius: 6px; background: #FFFDF2; padding: 12px 16px; font-size: 12.5px; line-height: 1.7; }
+  .note h3 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--acs-dark-blue); }
+  footer { background: var(--acs-dark-blue); color: #fff; padding: 14px 32px; font-size: 11px; opacity: 0.92; text-align: center; }
+  footer .gold { color: var(--acs-gold); }
+  @media print {
+    @page { size: letter landscape; margin: 0.4in; }
+    .canvas-controls { display: none !important; }
+    .canvas-wrap { overflow: visible !important; border: 0; }
+    .mermaid-stage { transform: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="brand">
+  <div>
+    <h1>Talkov Law — Litify Data Model · Entity Relationship Diagram</h1>
+    <div class="sub">Partition (CA Real Property / TIC) · Matter Plans · Stages · Tasks · Stage Switches · Party &amp; Money Objects</div>
+  </div>
+  <div class="acs-mark">ADVOCATE CLOUD SOLUTIONS<span class="tag">Supercharging Legal Efficiency</span></div>
+</header>
+
+<div class="intro">
+  <strong>How to read this:</strong> the <strong>template side</strong> (configured once) flows
+  <span class="api">litify_pm__Matter_Plan__c</span> → <span class="api">litify_pm__Matter_Stage__c</span> → <span class="api">litify_pm__Default_Matter_Task__c</span>.
+  The <strong>instance side</strong> (stamped per matter) flows <span class="api">litify_pm__Matter__c</span> → <span class="api">litify_pm__Matter_Stage_Activity__c</span> → standard <span class="api">Task</span>.
+  The matter's <em>current stage</em> is the <span class="api">litify_pm__Matter_Stage_Activity__c</span> lookup on Matter — a stage switch is a repoint of that lookup.
+  Fields marked <strong>CUSTOM</strong> are partition-specific additions; everything else is litify_pm managed or Salesforce standard. Verified against a live-org describe (litify_pm v66).
+</div>
+
+<div class="section">
+  <h2>Core ERD — plan engine, matter workflow, parties &amp; money</h2>
+  <div class="sub">Crow's-foot notation: || one · o{ many · o| zero-or-one. Attribute lists show key fields only (Matter alone carries ~450 fields in a typical org).</div>
+  <div class="canvas-wrap">
+    <div class="canvas-controls">
+      <button onclick="zoom(-0.1)" title="Zoom out">−</button>
+      <span class="zoom-value" id="zoomVal">100%</span>
+      <button onclick="zoom(0.1)" title="Zoom in">+</button>
+      <button onclick="zoomFit()" title="Reset">⤢</button>
+    </div>
+    <div class="mermaid-stage" id="erd"></div>
+  </div>
+  <div class="legend">
+    <div class="item"><span class="swatch" style="background:#E8F0FE; border-color:#0057B8"></span>litify_pm managed package</div>
+    <div class="item"><span class="swatch" style="background:#ECEFF1; border-color:#7F8C8D"></span>Salesforce standard</div>
+    <div class="item"><span class="swatch" style="background:#FFF1B8; border-color:#FFD700"></span>Partition-specific custom</div>
+  </div>
+  <div class="note">
+    <h3>Naming traps — objects that do NOT exist</h3>
+    There is no <span class="api">litify_pm__Matter_Task__c</span> (generated tasks are standard <span class="api">Task</span> records),
+    no <span class="api">litify_pm__Default_Matter_Plan__c</span> and no <span class="api">litify_pm__Default_Matter_Stage__c</span>
+    (the template objects are <span class="api">litify_pm__Matter_Plan__c</span> / <span class="api">litify_pm__Matter_Stage__c</span> themselves),
+    and no standalone <span class="api">litify_pm__Party__c</span> object — Party is a lookup field on <span class="api">litify_pm__Role__c</span> pointing to Account.
+  </div>
+  <div class="note">
+    <h3>Stage switch mechanics</h3>
+    1) Repoint <span class="api">litify_pm__Matter__c.litify_pm__Matter_Stage_Activity__c</span> to the target stage activity ·
+    2) Record-triggered flow detects IsChanged, stamps <span class="api">Set_As_Active_At__c</span> + <span class="api">Stage_Status__c</span> ·
+    3) Sweep still-open Tasks of other stages to Status = N/A ·
+    4) Instantiate the target stage's <span class="api">litify_pm__Default_Matter_Task__c</span> records as Tasks, owner resolved from the matter team by role ·
+    5) Cross-plan moves land via <span class="api">litify_pm__Matter_Stage_Switch__c</span> (plan + stage pair).
+    Branch rules for partition: settle pre-suit (Stage 3 → 11), PRPA skip (5 → 6 or 7), buyout closes (6 → 11), decline/refer (2 → Closed: Withdrawn).
+  </div>
+</div>
+
+<footer>Prepared by <strong>Advocate Cloud Solutions</strong> · <span class="gold">Supercharging Legal Efficiency</span> · <span id="footerDate"></span> · Confidential — Talkov Law</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+document.getElementById('footerDate').textContent = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+
+mermaid.initialize({
+  startOnLoad: false, securityLevel: 'loose', theme: 'base',
+  er: { useMaxWidth: false, fontSize: 13 },
+  themeVariables: {
+    fontSize: '13px', fontFamily: 'Lato, system-ui, sans-serif',
+    primaryColor: '#E8F0FE', primaryBorderColor: '#0057B8', primaryTextColor: '#1A1A1A',
+    lineColor: '#003D80', tertiaryColor: '#FFF1B8'
+  }
+});
+
+const ERD = `erDiagram
+  litify_pm__Case_Type__c {
+    Text Name "= Partition"
+  }
+  litify_pm__Matter_Plan__c {
+    Text Name "Partition - CA Real Property (TIC)"
+    Lookup litify_pm__Case_Type__c FK "binds plan to case type"
+    Number litify_pm__Tasks__c "rollup - 78 default tasks"
+    Date litify_pm__Estimated_Close_Date__c
+  }
+  litify_pm__Matter_Stage__c {
+    Text Name "11 stages - Intake thru Closeout"
+    Lookup litify_pm__Matter_Plan__c FK
+    Number litify_pm__Stage_Order__c "1-11"
+    LongText litify_pm__Guidance_for_success__c "exit-gate criteria"
+    Number litify_pm__Tasks__c "task count rollup"
+  }
+  litify_pm__Default_Matter_Task__c {
+    Text Name "template task"
+    Lookup litify_pm__Matter_Stage__c FK
+    Lookup litify_pm__Matter_Team_Role__c FK "assign by role"
+    Lookup litify_pm__Task_Type__c FK "UTBMS coding"
+    Picklist litify_pm__Due_Date_Type__c "due-date engine"
+    Text litify_pm__Due_Date_Matter_Date_Field__c "anchor Matter date field"
+    Lookup litify_pm__Due_Date_Default_Matter_Task__c FK "self - task-dependent due date"
+    Picklist litify_pm__Priority__c
+    Checkbox litify_pm__RepeatThisTask__c
+  }
+  litify_pm__Matter_Stage_Switch__c {
+    Lookup litify_pm__Matter_Plan__c FK
+    Lookup litify_pm__Matter_Stage__c FK
+    Text litify_pm__Matter_Plan_Name__c "cross-plan landing stage"
+  }
+  litify_pm__Matter_Team_Role__c {
+    Text Name "Intake - Paralegal - Associate - Partner - Finance"
+  }
+  litify_pm__Matter__c {
+    AutoNum Name
+    Lookup litify_pm__Client__c FK "Account"
+    Lookup litify_pm__Case_Type__c FK "= Partition"
+    Lookup litify_pm__Matter_Plan__c FK "applied plan"
+    Lookup litify_pm__Matter_Stage_Activity__c FK "CURRENT STAGE pointer"
+    Formula litify_pm__Matter_Stage_Activity_Formula__c "Active Stage name"
+    Picklist litify_pm__Status__c "Open - Closed reasons"
+    Date litify_pm__Open_Date__c
+    Date litify_pm__Closed_Date__c
+    Lookup litify_pm__Principal_Attorney__c FK "User"
+    Lookup litify_pm__Court__c FK "Account"
+    Text litify_pm__Docket_Number__c
+    Checkbox litify_pm__Ignore_Default_Plan__c
+    Lookup litify_pm__Starting_Matter_Stage_Override__c FK
+    Date litify_pm__Statute_Of_Limitations__c
+  }
+  litify_pm__Matter_Stage_Activity__c {
+    Text Name "label in org - Stage"
+    MasterDetail litify_pm__Matter__c FK
+    Lookup litify_pm__Original_Matter_Stage__c FK "template back-pointer"
+    Number litify_pm__Order__c
+    Picklist litify_pm__Stage_Status__c
+    Datetime litify_pm__Set_As_Active_At__c
+    LongText litify_pm__Guidance_for_success__c "copied from template"
+  }
+  Task {
+    Text Subject "standard Salesforce Task"
+    Lookup litify_pm__Matter__c FK
+    Lookup litify_pm__Matter_Stage_Activity__c FK "pinned to stage"
+    Picklist Status "Open - Completed - NA"
+    Date ActivityDate "from due-date engine"
+    Lookup OwnerId FK "resolved from team role"
+  }
+  litify_pm__Matter_Team_Member__c {
+    Lookup litify_pm__Matter__c FK
+    Lookup litify_pm__Matter_Team_Role__c FK
+    Lookup litify_pm__User__c FK
+  }
+  litify_pm__Intake__c {
+    Picklist litify_pm__Status__c "intake pipeline"
+    Lookup litify_pm__Client__c FK "Account"
+    Lookup litify_pm__Case_Type__c FK
+    Lookup litify_pm__Matter__c FK "set on conversion"
+    Checkbox litify_pm__Qualified__c
+    Checkbox litify_pm__IsConverted__c
+    Checkbox litify_pm__Retainer_Agreement_Signed__c
+    Lookup litify_pm__Source__c FK "UTM - campaign"
+  }
+  Account {
+    Text Name "person or company"
+    Picklist RecordType "Client - Adverse - Court - Vendor"
+  }
+  litify_pm__Role__c {
+    Lookup litify_pm__Party__c FK "Account - THE party model"
+    Lookup litify_pm__Matter__c FK
+    Picklist litify_pm__Role__c "Cotenant - Referee - Broker - Appraiser"
+    Lookup litify_pm__Parent_Role__c FK "self"
+    Percent Fractional_Interest__c "CUSTOM - cotenancy ledger"
+    Currency Opening_Contributions__c "CUSTOM"
+  }
+  litify_pm__Time_Entry__c {
+    Lookup litify_pm__Matter__c FK
+    Lookup litify_pm__Task_Type__c FK
+    Lookup litify_pm__Team_Member__c FK
+    Number litify_pm__Hours__c
+    Picklist Common_Benefit__c "CUSTOM required - Y N Mixed - sec 874.040"
+  }
+  litify_pm__Expense__c {
+    Lookup litify_pm__Matter__c FK
+    Lookup litify_pm__ExpenseType2__c FK
+    Currency litify_pm__Amount__c "feeds accounting schedule"
+  }
+  litify_pm__Negotiation__c {
+    Lookup litify_pm__Matter__c FK
+    Lookup litify_pm__Negotiating_with__c FK "Role"
+    Currency Demand_Amount__c "demand and counter rounds"
+  }
+  litify_pm__Resolution__c {
+    Lookup litify_pm__Matter__c FK
+    Lookup litify_pm__Negotiation__c FK
+    Lookup litify_pm__Payor__c FK "Account"
+    Currency litify_pm__Amount__c "settlement - judgment - buyout"
+  }
+  Lis_Pendens__c {
+    Lookup Matter__c FK "CUSTOM object"
+    Picklist County__c
+    Text Instrument_Number__c
+    Date Recorded_Date__c
+    Checkbox Service_Proof__c "sec 405.22 certified mail"
+    Date Released_Date__c "Stage 11 gate"
+  }
+  litify_pm__COI_Search__c {
+    Lookup litify_pm__Intake__c FK
+    Lookup litify_pm__Matter__c FK
+    Text Search_Terms "per named co-owner"
+  }
+
+  litify_pm__Case_Type__c ||--o| litify_pm__Matter_Plan__c : "plan matched by case type"
+  litify_pm__Matter_Plan__c ||--|{ litify_pm__Matter_Stage__c : "11 ordered stages"
+  litify_pm__Matter_Stage__c ||--o{ litify_pm__Default_Matter_Task__c : "template tasks"
+  litify_pm__Matter_Plan__c ||--o{ litify_pm__Matter_Stage_Switch__c : "cross-plan map"
+  litify_pm__Matter_Stage__c ||--o{ litify_pm__Matter_Stage_Switch__c : "landing stage"
+  litify_pm__Matter_Team_Role__c ||--o{ litify_pm__Default_Matter_Task__c : "assigned by role"
+  litify_pm__Default_Matter_Task__c ||--o{ litify_pm__Default_Matter_Task__c : "dependent due dates"
+  litify_pm__Case_Type__c ||--o{ litify_pm__Matter__c : "classifies"
+  litify_pm__Matter_Plan__c ||--o{ litify_pm__Matter__c : "applied on create"
+  litify_pm__Matter__c ||--|{ litify_pm__Matter_Stage_Activity__c : "stage instances (master-detail)"
+  litify_pm__Matter_Stage__c ||--o{ litify_pm__Matter_Stage_Activity__c : "instantiated from"
+  litify_pm__Matter_Stage_Activity__c |o--o| litify_pm__Matter__c : "CURRENT STAGE lookup"
+  litify_pm__Matter_Stage_Activity__c ||--o{ Task : "stage tasks"
+  litify_pm__Matter__c ||--o{ Task : "all matter tasks"
+  litify_pm__Matter__c ||--o{ litify_pm__Matter_Team_Member__c : "team"
+  litify_pm__Matter_Team_Role__c ||--o{ litify_pm__Matter_Team_Member__c : "role"
+  litify_pm__Intake__c |o--o| litify_pm__Matter__c : "converts to"
+  litify_pm__Intake__c ||--o{ litify_pm__COI_Search__c : "conflict checks"
+  Account ||--o{ litify_pm__Role__c : "party"
+  litify_pm__Matter__c ||--o{ litify_pm__Role__c : "cotenancy ledger + referee + broker"
+  litify_pm__Matter__c ||--o{ litify_pm__Time_Entry__c : "tagged time"
+  litify_pm__Matter__c ||--o{ litify_pm__Expense__c : "costs"
+  litify_pm__Matter__c ||--o{ litify_pm__Negotiation__c : "demand rounds"
+  litify_pm__Negotiation__c ||--o{ litify_pm__Resolution__c : "resolves into"
+  litify_pm__Matter__c ||--o{ litify_pm__Resolution__c : "outcome + disbursement"
+  litify_pm__Matter__c ||--o{ Lis_Pendens__c : "one per county recording"
+  litify_pm__Role__c ||--o{ litify_pm__Negotiation__c : "negotiating with"
+`;
+
+let zoomLevel = 0.9;
+function zoom(d) { zoomLevel = Math.max(0.3, Math.min(2.0, zoomLevel + d)); applyZoom(); }
+function zoomFit() { zoomLevel = 0.9; applyZoom(); }
+function applyZoom() {
+  document.getElementById('erd').style.transform = 'scale(' + zoomLevel + ')';
+  document.getElementById('zoomVal').textContent = Math.round(zoomLevel * 100) + '%';
+}
+
+(async () => {
+  try {
+    const { svg } = await mermaid.render('erdGraph', ERD);
+    document.getElementById('erd').innerHTML = svg;
+    applyZoom();
+  } catch (e) {
+    document.getElementById('erd').innerHTML = '<pre style="color:#C0392B;padding:20px;white-space:pre-wrap">Mermaid error: ' + (e.message || e) + '</pre>';
+  }
+})();
+</script>
+</body>
+</html>
