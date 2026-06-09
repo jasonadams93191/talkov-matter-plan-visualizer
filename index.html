@@ -631,6 +631,7 @@ function objectModelDiagram() { return `flowchart LR
   classDef gold fill:#FFF1B8,stroke:#FFD700,stroke-width:2.5px,color:#1A1A1A`; }
 
 const MODEL_OBJECTS = [
+  { api:'litify_pm__Case_Type__c', pkg:'managed', label:'Case Type', purpose:'The key that binds plan to matter: the Matter Plan looks up Case Type, and every Matter with Case Type = Partition gets this plan applied automatically on create. Also drives intake routing, estimated-close-date config, and reporting rollups.', fields:'Name = "Partition" · referenced by litify_pm__Matter_Plan__c, litify_pm__Matter__c, litify_pm__Intake__c' },
   { api:'litify_pm__Matter_Plan__c', pkg:'managed', label:'Matter Plan (template)', purpose:'The reusable plan header, keyed to Case Type via litify_pm__Case_Type__c. One per case type — ours: "Partition — CA Real Property (TIC)". Applied automatically on Matter create unless Ignore_Default_Plan__c = true.', fields:'Name · litify_pm__Case_Type__c · litify_pm__Estimated_Close_Date__c · litify_pm__Tasks__c (rollup)' },
   { api:'litify_pm__Matter_Stage__c', pkg:'managed', label:'Matter Stage (template)', purpose:'Template stage under a plan. Stage_Order__c drives sequence; Guidance_for_success__c carries the exit-gate criteria shown to the team on the matter plan component.', fields:'litify_pm__Matter_Plan__c · litify_pm__Stage_Order__c · litify_pm__Guidance_for_success__c · litify_pm__Tasks__c' },
   { api:'litify_pm__Default_Matter_Task__c', pkg:'managed', label:'Default Matter Task (template)', purpose:'Template task under a stage, with the full due-date engine: relative to stage activation, a Matter date field, or another task (Due_Date_Default_Matter_Task__c). Assigned by team role, resolved to a user from the Matter Team at instantiation.', fields:'litify_pm__Matter_Stage__c · litify_pm__Matter_Team_Role__c · litify_pm__Due_Date_Type__c · litify_pm__Due_Date_Matter_Date_Field__c / _Operator__c / _Value__c · litify_pm__Due_Date_Default_Matter_Task__c · litify_pm__Priority__c · litify_pm__RepeatThisTask__c' },
@@ -709,19 +710,97 @@ const EXTRA_DETAILS = [
   { match:['Lis Pendens'], role:'sys', title:'Lis Pendens — record + release everywhere', desc:'§ 872.250 makes recording mandatory "immediately upon" filing, in every county where any parcel sits, served by certified mail per § 405.22. Defective service is the #1 expungement ground (§ 405.38 fee shift). Custom Lis_Pendens__c object tracks each county recording; Stage 11 automation blocks closeout until every record shows a Released_Date__c.' },
   { match:['Referee'], role:'ext', title:'Partition Referee (§ 873.010)', desc:'Court-appointed officer who runs the partition — often a real-estate attorney or broker. Powers under § 873.060: retain broker, list, accept offers subject to confirmation, prevent waste, collect rents. Oath within 10 days; bond at court discretion; discharged at final account.' },
   { match:['Matter Created','Intake → Matter','Conversion'], role:'sys', title:'Intake → Matter Conversion', desc:'On engagement signature, litify_pm__Intake__c converts: litify_pm__Matter__c created, Case Type = Partition matches the Matter Plan, stage activities instantiate, Stage 3 becomes active (or Starting_Matter_Stage_Override__c), default matter team applies, and Stage 3 default tasks generate.' },
-  { match:['Closed: Withdrawn','Closed: Settled','Closed: Completed','Closure'], role:'sys', title:'Closure Statuses', desc:'litify_pm__Status__c closure reasons: Closed: Completed (full partition through judgment), Closed: Settled (pre-suit, discovery, or PRPA buyout), Closed: Stipulated (stipulated dismissal/accounting), Closed: Withdrawn (decline/refer-out).' }
+  { match:['Closed: Withdrawn'], role:'sys', title:'Closed: Withdrawn', desc:'Closure status when the prospect is declined or referred out at the Retain gateway — no engagement, no billable matter. If a Matter record was already opened, litify_pm__Status__c is set to Closed: Withdrawn and litify_pm__Closed_Reason__c captures the disposition for intake analytics.' },
+  { match:['Closed: Completed / Settled','Closed: Completed /'], role:'sys', title:'Closure Statuses', desc:'litify_pm__Status__c closure reasons on the Matter: Closed: Completed (full partition through final judgment and distribution), Closed: Settled (pre-suit settlement, discovery settlement, or PRPA buyout), Closed: Stipulated (stipulated dismissal or stipulated accounting). litify_pm__Closed_Date__c and litify_pm__Closed_Reason__c stamp for closed-matter reporting.' },
+  { match:['Closed: Settled','Closed: Completed','Closed: Stipulated','Closure'], role:'sys', title:'Closure Status', desc:'litify_pm__Status__c closure reason stamped with litify_pm__Closed_Date__c and litify_pm__Closed_Reason__c — drives closed-matter reporting (outcome, cycle time, net fees).' },
+  { match:['Switch → Stage 11 Buyout','Switch → Stage 11 Closeout'], role:'sys', title:'Stage Switch · Jump to Closeout', desc:'Non-linear stage switch — the matter resolves early (pre-suit settlement or PRPA buyout) and jumps directly to Stage 11, skipping all intervening stages. The flow repoints litify_pm__Matter__c.litify_pm__Matter_Stage_Activity__c to the Stage 11 activity, sweeps still-open tasks from skipped stages to Status = N/A, instantiates the closeout tasks, and sets litify_pm__Status__c = Closed: Settled at completion.' },
+  { match:['Switch → Stage 7'], role:'sys', title:'Stage Switch · PRPA exits to Interlocutory Judgment', desc:'When PRPA does not produce a buyout (no election, or funding window expires), the matter switches to Stage 7. The court proceeds to manner determination under § 874.318 / interlocutory judgment under § 872.720. Flow repoints the stage lookup and generates Stage 7 default tasks.' },
+  { match:['Switch → Stage 4'], role:'sys', title:'Stage Switch · Proceed to Pleadings', desc:'Demand window expired without settlement — the matter switches to Stage 4. Stage 4 default tasks (complaint, lis pendens, service) instantiate from litify_pm__Default_Matter_Task__c on stage activation.' },
+  { match:['Switch →','Advance to'], role:'sys', title:'Stage Switch', desc:'A stage switch repoints litify_pm__Matter__c.litify_pm__Matter_Stage_Activity__c to the target stage activity. The record-triggered flow stamps Set_As_Active_At__c, sweeps still-open tasks of other stages to Status = N/A, and instantiates the target stage\'s Default Matter Tasks with owners resolved from the matter team.' }
 ];
+
+// Diagram node label → task lookup, per stage (first match wins — order matters)
+const NODE_TASK_MAP = {
+  intake:  [['Lead Capture',1],['Send Intake Form',2],['Followup',3],['Multi-Party Conflicts',4],['Property Pre-Screen',5],['Geo-Route',6],['Book Consultation',7]],
+  consult: [['Conduct Consultation',1],['Sign Engagement Letter',4],['Engagement Letter',3],['Retainer / Contingency',5],['Matter Conversion',6]],
+  prelit:  [['Preliminary Title Report',1],['Chain-of-Title',2],['Cotenancy Ledger',3],['Contribution Records',4],['Demand Letter',5]],
+  plead:   [['Draft Verified Complaint',1],['Partner Review',2],['E-File Complaint',3],['Record Lis Pendens',4],['Issue Summons',5],['Serve All Cotenants',6],['Track Answers',7],['Default Prove-Up',8]],
+  disc:    [['Initial Disclosures',1],['Written Discovery',2],['Real-Estate Subpoenas',3],['Depositions of Cotenants',4],['Designate Appraiser',5],['Expungement',6],['MSA on Right',7]],
+  prpa:    [['Court-Ordered Appraisal',2],['Notice of FMV',3],['FMV Objection',4],['Notice of Buyout Right',5],['Funding Window',7],['Manner §',8],['Open-Market Sale',9],['Court Confirmation',10]],
+  ij:      [['Prepare Interlocutory',1],['Manner:',2],['Propose Referee',3],['Referee Oath',4],['Referee Bond',5],['Referee Engagement',6]],
+  sale:    [['Listing Agreement',2],['Marketing Period',3],['Accept Offer',4],['Notice of Sale',5],['Report of Sale',6],['MTC + Overbid',7],['Escrow Close',8],['In-Kind Survey',9]],
+  acct:    [['Mortgage / Tax',1],['Repairs + Improvements',2],['Rental Value Offset',3],['Ouster Analysis',4],['Forensic CPA',5],['Settle or Try',6],['Final Accounting Schedule',7]],
+  fees:    [['Draft Final Judgment',1],['Common-Benefit Tagging',2],['Fee Motion',3],['Fee Declaration',4],['Fee Hearing',5]],
+  close:   [['Disbursement Instructions',1],['Wire Funds',2],['Record Deeds',3],['Release Lis Pendens',4],['Referee Final Account',5],['Client Closeout',6],['Matter Status',7]]
+};
+
+function taskDetail(sid, n) {
+  const t = (TASKS[sid] || []).find(x => x.n === n);
+  if (!t) return null;
+  return { role: t.role, title: t.name, desc: t.detail + (t.cite ? ' — Authority: ' + t.cite : ''), isTask: true, due: t.due, deps: t.deps, gate: t.gate, kind: taskKind(t) };
+}
+
+function stageCardDetail(label) {
+  const m = label.match(/^(\d+)\s*·/);
+  if (!m) return null;
+  const idx = parseInt(m[1], 10);
+  const s = STAGES[idx]; // STAGES[0] is overview, so index aligns with stage number
+  if (!s || s.id === 'overview') return null;
+  const meta = STAGE_META[s.id];
+  const tasks = TASKS[s.id] || [];
+  return { role:'sys', title: s.name, desc:
+    `${meta.days} · ${meta.owners}${meta.statute ? ' · ' + meta.statute : ''} · ${tasks.length} default tasks instantiate on stage activation.`,
+    extra: [ ['Exit gate (Guidance_for_success__c)', meta.exitGate],
+             ['Stage switches', meta.switches.length ? meta.switches.map(x => x.label).join(' · ') : 'Terminal stage — Matter closes here'] ] };
+}
+
+function modelObjectDetail(label) {
+  const lower = label.toLowerCase();
+  const candidates = [];
+  MODEL_OBJECTS.forEach(o => {
+    o.api.split(/[\s/+]+/).filter(x => x.length > 3).forEach(name => candidates.push([name, o]));
+  });
+  candidates.sort((a, b) => b[0].length - a[0].length); // longest API name first
+  for (const [name, o] of candidates) {
+    if (lower.includes(name.toLowerCase())) {
+      return { role:'sys', title: o.label + ' — ' + o.api, desc: o.purpose, extra: [ ['Key fields', o.fields], ['Source', o.pkg === 'managed' ? 'litify_pm managed package' : (o.pkg === 'custom' ? 'Partition-specific custom' : 'Salesforce standard object')] ] };
+    }
+  }
+  if (lower.startsWith('task (standard')) {
+    const o = MODEL_OBJECTS.find(x => x.api === 'Task');
+    if (o) return { role:'sys', title: o.label, desc: o.purpose, extra: [['Key fields', o.fields]] };
+  }
+  return null;
+}
 
 function findNodeDetail(label) {
   const lower = label.toLowerCase();
-  for (const d of EXTRA_DETAILS) for (const m of d.match) if (lower.includes(m.toLowerCase())) return d;
-  for (const sid of Object.keys(TASKS)) for (const t of TASKS[sid]) {
-    const probe = t.name.toLowerCase().slice(0, 18);
-    if (probe && lower.includes(probe)) {
-      return { role: t.role, title: t.name, desc: t.detail + (t.cite ? ' — Authority: ' + t.cite : ''), isTask: true, due: t.due, deps: t.deps };
+  // 1) Stage-diagram nodes mapped to their task
+  for (const sid of Object.keys(NODE_TASK_MAP)) {
+    for (const [probe, n] of NODE_TASK_MAP[sid]) {
+      if (lower.includes(probe.toLowerCase())) { const d = taskDetail(sid, n); if (d) return d; }
     }
   }
-  return null;
+  // 2) Overview stage cards
+  const sc = stageCardDetail(label);
+  if (sc) return sc;
+  // 3) Concept / gateway / switch catalog
+  for (const d of EXTRA_DETAILS) for (const m of d.match) if (lower.includes(m.toLowerCase())) return d;
+  // 4) Object-model nodes
+  const mo = modelObjectDetail(label);
+  if (mo) return mo;
+  // 5) Fuzzy task-name fallback
+  for (const sid of Object.keys(TASKS)) for (const t of TASKS[sid]) {
+    const probe = t.name.toLowerCase().slice(0, 18);
+    if (probe && lower.includes(probe)) return taskDetail(sid, t.n);
+  }
+  // 6) Guaranteed fallback — stage context
+  if (currentView === 'workflow' && currentStage !== 'overview') {
+    const meta = STAGE_META[currentStage];
+    const s = STAGES.find(x => x.id === currentStage);
+    return { role:'sys', title: label, desc: 'Step in ' + s.name + ' (' + meta.days + ' · ' + meta.owners + ').', extra: [['Stage exit gate', meta.exitGate]] };
+  }
+  return { role:'sys', title: label, desc: 'Element of the Partition — CA Real Property (TIC) Litify matter plan. See the Plan Template view for the full load-ready configuration and the Object Model view for schema detail.' };
 }
 
 const PANEL_ROLE_STYLE = {
@@ -745,7 +824,16 @@ function openPanel(label) {
   } else {
     document.getElementById('panelTitle').textContent = d.title;
     let body = '<h4>Description</h4><p>' + d.desc + '</p>';
-    if (d.isTask) body += '<h4>Due / Trigger</h4><p>' + d.due + '</p><h4>Depends On</h4><p>' + d.deps + '</p><h4>Litify shape</h4><p>Standard <code>Task</code> pinned to <code>litify_pm__Matter__c</code> + <code>litify_pm__Matter_Stage_Activity__c</code>, generated from <code>litify_pm__Default_Matter_Task__c</code> on stage activation.</p>';
+    if (d.isTask) {
+      body += '<h4>Due / Trigger</h4><p>' + d.due + '</p><h4>Depends On</h4><p>' + d.deps + '</p>';
+      if (d.gate) body += '<h4>Exit gate</h4><p>This task gates the stage switch — the stage cannot advance until it completes.</p>';
+      body += '<h4>Litify shape</h4><p>' + (d.kind === 'gateway'
+        ? 'Decision gateway — resolved by the assigned role; the outcome drives which stage switch fires (see the switch buttons below the diagram).'
+        : (d.kind === 'automation'
+          ? 'Automation — record-triggered flow / packaged Litify behavior. Tracked as a completed <code>Task</code> for audit, pinned to <code>litify_pm__Matter__c</code> + <code>litify_pm__Matter_Stage_Activity__c</code>.'
+          : 'Standard <code>Task</code> pinned to <code>litify_pm__Matter__c</code> + <code>litify_pm__Matter_Stage_Activity__c</code>, generated from <code>litify_pm__Default_Matter_Task__c</code> on stage activation.')) + '</p>';
+    }
+    if (d.extra) d.extra.forEach(([h, v]) => { body += '<h4>' + h + '</h4><p>' + v + '</p>'; });
     document.getElementById('panelBody').innerHTML = body;
   }
   document.getElementById('panel').classList.add('open');
