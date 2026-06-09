@@ -25,13 +25,15 @@
   .section { background: #fff; border-bottom: 1px solid var(--acs-line); padding: 20px 32px; }
   .section h2 { margin: 0 0 4px; font-size: 15px; color: var(--acs-blue); }
   .section .sub { font-size: 12px; color: var(--acs-muted); margin-bottom: 12px; }
-  .canvas-wrap { position: relative; background: #fff; overflow: auto; border: 1px solid var(--acs-line); border-radius: 8px; }
-  .canvas-controls { position: sticky; top: 12px; float: right; margin: 12px 12px 0 0; background: #fff; border: 1px solid var(--acs-line); border-radius: 8px; padding: 6px; display: inline-flex; gap: 4px; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .canvas-wrap { position: relative; background: #fff; overflow: hidden; border: 1px solid var(--acs-line); border-radius: 8px; height: calc(100vh - 230px); min-height: 480px; cursor: grab; }
+  .canvas-wrap:active { cursor: grabbing; }
+  .canvas-wrap svg { width: 100%; height: 100%; display: block; }
+  .canvas-controls { position: absolute; top: 12px; right: 12px; background: #fff; border: 1px solid var(--acs-line); border-radius: 8px; padding: 6px; display: inline-flex; gap: 4px; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.06); cursor: default; }
   .canvas-controls button { border: 0; background: var(--acs-bg); width: 30px; height: 30px; border-radius: 4px; cursor: pointer; font-weight: 600; }
   .canvas-controls button:hover { background: var(--acs-blue); color: #fff; }
   .zoom-value { min-width: 44px; text-align: center; font-size: 11px; color: var(--acs-muted); padding: 7px 0; font-family: 'JetBrains Mono', monospace; }
-  .mermaid-stage { padding: 24px; transform-origin: top left; transition: transform 100ms; }
-  .mermaid-stage svg { max-width: none !important; height: auto !important; }
+  .mermaid-stage { width: 100%; height: 100%; }
+  .hint-bar { font-size: 11px; color: var(--acs-muted); padding: 6px 0 0; }
   .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 11.5px; color: var(--acs-muted); padding: 12px 0 0; }
   .legend .item { display: flex; align-items: center; gap: 6px; }
   .legend .swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--acs-line); }
@@ -77,6 +79,7 @@
     </div>
     <div class="mermaid-stage" id="erd"></div>
   </div>
+  <div class="hint-bar">Drag to pan · scroll to zoom · double-click to zoom in · ⤢ to fit</div>
   <div class="legend">
     <div class="item"><span class="swatch" style="background:#E8F0FE; border-color:#0057B8"></span>litify_pm managed package</div>
     <div class="item"><span class="swatch" style="background:#ECEFF1; border-color:#7F8C8D"></span>Salesforce standard</div>
@@ -103,6 +106,7 @@
 <footer>Prepared by <strong>Advocate Cloud Solutions</strong> · <span class="gold">Supercharging Legal Efficiency</span> · <span id="footerDate"></span> · Confidential — Talkov Law</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 <script>
 document.getElementById('footerDate').textContent = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
 
@@ -279,19 +283,31 @@ const ERD = `erDiagram
   litify_pm__Role__c ||--o{ litify_pm__Negotiation__c : "negotiating with"
 `;
 
-let zoomLevel = 0.9;
-function zoom(d) { zoomLevel = Math.max(0.3, Math.min(2.0, zoomLevel + d)); applyZoom(); }
-function zoomFit() { zoomLevel = 0.9; applyZoom(); }
-function applyZoom() {
-  document.getElementById('erd').style.transform = 'scale(' + zoomLevel + ')';
-  document.getElementById('zoomVal').textContent = Math.round(zoomLevel * 100) + '%';
+let panZoom = null;
+function updateZoomVal() {
+  if (panZoom) document.getElementById('zoomVal').textContent = Math.round(panZoom.getZoom() * 100) + '%';
 }
+function zoom(d) { if (panZoom) { d > 0 ? panZoom.zoomIn() : panZoom.zoomOut(); updateZoomVal(); } }
+function zoomFit() { if (panZoom) { panZoom.resize(); panZoom.fit(); panZoom.center(); updateZoomVal(); } }
 
 (async () => {
   try {
     const { svg } = await mermaid.render('erdGraph', ERD);
-    document.getElementById('erd').innerHTML = svg;
-    applyZoom();
+    const host = document.getElementById('erd');
+    host.innerHTML = svg;
+    const svgEl = host.querySelector('svg');
+    svgEl.removeAttribute('style');
+    svgEl.setAttribute('width', '100%');
+    svgEl.setAttribute('height', '100%');
+    panZoom = svgPanZoom(svgEl, {
+      panEnabled: true, zoomEnabled: true, dblClickZoomEnabled: true,
+      mouseWheelZoomEnabled: true, preventMouseEventsDefault: true,
+      zoomScaleSensitivity: 0.3, minZoom: 0.15, maxZoom: 8,
+      fit: true, center: true, controlIconsEnabled: false
+    });
+    panZoom.setOnZoom(updateZoomVal);
+    updateZoomVal();
+    window.addEventListener('resize', () => { if (panZoom) { panZoom.resize(); panZoom.fit(); panZoom.center(); } });
   } catch (e) {
     document.getElementById('erd').innerHTML = '<pre style="color:#C0392B;padding:20px;white-space:pre-wrap">Mermaid error: ' + (e.message || e) + '</pre>';
   }
