@@ -72,6 +72,7 @@
     <button onclick="zoomBy(0.15)" title="Zoom in">+</button>
     <button onclick="fitView()" title="Fit to view">⤢ Fit</button>
     <button onclick="resetLayout()" title="Reset table positions">↺ Reset layout</button>
+    <button id="sysToggle" onclick="toggleSystem()" title="Show / hide the Litify objects that work in the background — the plan-engine templates (Matter Plan, Matter Stage, Default Matter Task, Stage Switch, Team Role, Case Type)">◩ Hide background objects</button>
   </div>
   <div class="legend">
     <span class="item"><span class="swatch" style="background:#E8F0FE; border-color:#0057B8"></span>litify_pm managed</span>
@@ -333,6 +334,7 @@ function drawWires() {
     + '</defs>';
   RELS.forEach(rel => {
     const [fromId, toId, label, kind] = rel;
+    if (!sysVisible && (SYS_IDS.includes(fromId) || SYS_IDS.includes(toId))) return;
     const a = rectOf(fromId), b = rectOf(toId);
     const acx = a.x + a.w / 2, acy = a.y + a.h / 2;
     const bcx = b.x + b.w / 2, bcy = b.y + b.h / 2;
@@ -380,6 +382,16 @@ function fitView() {
   panY = (vh - 2000 * zoom) / 2;
   applyTransform();
 }
+// Background / system objects — the Litify plan engine that users never touch directly
+const SYS_IDS = ['casetype', 'plan', 'stage', 'dmt', 'switch', 'teamrole'];
+let sysVisible = true;
+function toggleSystem() {
+  sysVisible = !sysVisible;
+  SYS_IDS.forEach(id => { document.getElementById('ent_' + id).style.display = sysVisible ? '' : 'none'; });
+  document.getElementById('sysToggle').textContent = sysVisible ? '◩ Hide background objects' : '◪ Show background objects';
+  drawWires();
+}
+
 function resetLayout() {
   ENTITIES.forEach(e => {
     const el = document.getElementById('ent_' + e.id);
