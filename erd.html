@@ -66,7 +66,7 @@
 <header class="brand">
   <div>
     <h1>Talkov Law — Litify Data Model · Entity Relationship Diagram</h1>
-    <div class="sub">Partition (CA Real Property / TIC) · Account → Matter cascade · drag tables to rearrange · drag canvas to pan</div>
+    <div class="sub">Partition (CA Real Property / TIC) · Client → Intake → Matter cascade · v2 reconciled with Talkov Litify buildout (June 2026)</div>
   </div>
   <div class="acs-mark">ADVOCATE CLOUD SOLUTIONS<span class="tag">Supercharging Legal Efficiency</span></div>
 </header>
@@ -137,7 +137,8 @@ const ENTITIES = [
       ['Picklist','litify_pm__Status__c', 'intake pipeline'],
       ['Checkbox','litify_pm__Qualified__c · IsConverted__c', ''],
       ['Checkbox','litify_pm__Retainer_Agreement_Signed__c', ''],
-      ['Lookup','litify_pm__Source__c', 'UTM / campaign', 'FK']
+      ['Lookup','litify_pm__Source__c', 'UTM / campaign', 'FK'],
+      ['Text','Factory enrichment fields','address · property facts · equity (Property Radar)', 'C']
     ]},
   // Template column (right)
   { id:'casetype', api:'litify_pm__Case_Type__c', lbl:'Case Type', cls:'pkg', x:1850, y:30,
@@ -190,13 +191,15 @@ const ENTITIES = [
       ['Datetime','litify_pm__Set_As_Active_At__c','']
     ]},
   { id:'role', api:'litify_pm__Role__c', lbl:'Role — the party model', cls:'pkg', x:340, y:1080,
-    purpose:'THE cotenancy ledger: one Role per co-owner (Party → Account). Also Referee, Broker, Appraiser.',
+    purpose:'THE cotenancy ledger: one Role per co-owner (Party → Account). Also opposing counsel, trustees/entities, Referee, Broker, Appraiser — the buildout’s related-party structure.',
     fields:[
       ['Lookup','litify_pm__Party__c','Account', 'FK'],
       ['Lookup','litify_pm__Matter__c','', 'FK'],
       ['Picklist','litify_pm__Role__c','Cotenant · Referee · Broker'],
       ['Percent','Fractional_Interest__c','cotenancy %', 'C'],
-      ['Currency','Opening_Contributions__c','', 'C']
+      ['Currency','Opening_Contributions__c','', 'C'],
+      ['Checkbox','Include_on_POS__c','include on Proof of Service (buildout)', 'C'],
+      ['Number','Role_Order__c','display order on layouts (buildout)', 'C']
     ]},
   { id:'mtm', api:'litify_pm__Matter_Team_Member__c', lbl:'Matter Team Member', cls:'pkg', x:1070, y:1100,
     purpose:'Resolves team roles to users — task owners come from here.',
@@ -206,13 +209,15 @@ const ENTITIES = [
       ['Lookup','litify_pm__User__c','', 'FK']
     ]},
   { id:'property', api:'Property__c', lbl:'Property — custom object', cls:'custom', x:1400, y:740,
-    purpose:'The asset itself — one per parcel (multi-parcel matters supported). Drives geo-routing, PRPA eligibility, appraisal, and county-by-county lis pendens.',
+    purpose:'The asset itself — one per parcel. In the Talkov buildout as the Property UI + deed-history layout, auto-enriched by their Factory (Property Radar equity). Drives geo-routing, address-first conflicts, PRPA eligibility, appraisal, and county-by-county lis pendens.',
     fields:[
       ['Lookup','Matter__c','', 'FK'],
       ['Text','APN__c · Address__c','parcel identity', 'C'],
       ['Picklist','County__c','drives lis pendens + geo-routing', 'C'],
       ['Picklist','Vesting__c','TIC · Joint Tenancy — PRPA test', 'C'],
       ['Currency','FMV_Estimate__c','intake pre-screen', 'C'],
+      ['Currency','Equity__c','Factory enrichment — Property Radar API', 'C'],
+      ['LongText','Deed_History__c','deed-history layout (child Deed__c optional)', 'C'],
       ['Currency','Appraised_Value__c','court-ordered § 874.316', 'C'],
       ['Currency','Mortgage_Balance__c','', 'C'],
       ['Picklist','Occupancy__c','who is in possession — Hunter offset', 'C']
@@ -239,6 +244,16 @@ const ENTITIES = [
       ['Date','Buyout_Election_Date__c','cotenant elects', 'C'],
       ['Formula','Funding_Deadline__c','= Election + 60', 'C']
     ]},
+  { id:'trustdeed', api:'Trust_Deed__c', lbl:'Trust Deed — custom object', cls:'custom', x:1730, y:740,
+    purpose:'Talkov secures fees with a deed of trust at engagement: e-signed, e-notarized (Notarize), recorded — then reconveyed at payoff (payoff@talkovlaw.com inbox automation candidate).',
+    fields:[
+      ['Lookup','Matter__c','', 'FK'],
+      ['Date','Signed_Date__c','e-signature', 'C'],
+      ['Date','Notarized_Date__c','e-notary (Notarize)', 'C'],
+      ['Date','Recorded_Date__c','fee security perfected', 'C'],
+      ['Text','Instrument_Number__c','', 'C'],
+      ['Date','Reconveyed_Date__c','at payoff — closeout gate', 'C']
+    ]},
   { id:'task', api:'Task', lbl:'Task — Salesforce standard', cls:'std', x:740, y:1420,
     purpose:'Generated work items — pinned to the matter AND the stage activity. No litify_pm__Matter_Task__c exists.',
     fields:[
@@ -249,11 +264,12 @@ const ENTITIES = [
       ['Lookup','OwnerId','resolved from team role', 'FK']
     ]},
   { id:'time', api:'litify_pm__Time_Entry__c', lbl:'Time Entry', cls:'pkg', x:420, y:1420,
-    purpose:'§ 874.040 fee engine — Common_Benefit__c required at entry.',
+    purpose:'Timekeeping with flat-fee billing categories (in buildout). § 874.040 fee engine — Common_Benefit__c required at entry (GAP: not in buildout).',
     fields:[
       ['Lookup','litify_pm__Matter__c','', 'FK'],
       ['Number','litify_pm__Hours__c',''],
-      ['Picklist','Common_Benefit__c','Y / N / Mixed — required', 'C']
+      ['Picklist','Flat_Fee_Category__c','flat-fee billing categories (buildout)', 'C'],
+      ['Picklist','Common_Benefit__c','Y / N / Mixed — required · GAP: not in buildout', 'C']
     ]},
   { id:'neg', api:'litify_pm__Negotiation__c', lbl:'Negotiation', cls:'pkg', x:100, y:1420,
     purpose:'Demand and counter-offer rounds (Stage 3).',
@@ -315,6 +331,7 @@ const RELS = [
   ['matter','property','parcels (1+)','1m'],
   ['property','lp','recorded per county','1m'],
   ['matter','prpaclock','PRPA clock field set','11dash'],
+  ['matter','trustdeed','fee security','1m'],
   ['matter','coi','matter conflicts','1m'],
   ['matter','res','outcome','1m'],
   ['neg','res','resolves into','1m'],
@@ -332,7 +349,7 @@ const DEFAULT_POS = {};
 const GROUP = {
   casetype:'engine', plan:'engine', stage:'engine', dmt:'engine', switch:'engine', teamrole:'engine',
   intake:'flow', matter:'flow', msa:'flow', task:'flow', mtm:'flow', coi:'flow', lp:'flow', prpaclock:'flow',
-  account:'money', role:'money', time:'money', exp:'money', neg:'money', res:'money', property:'money'
+  account:'money', role:'money', time:'money', exp:'money', neg:'money', res:'money', property:'money', trustdeed:'money'
 };
 
 ENTITIES.forEach(e => {

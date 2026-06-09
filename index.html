@@ -38,6 +38,7 @@
   .stage-btn { padding: 7px 11px; border-radius: 6px; background: var(--acs-bg); border: 1px solid var(--acs-line); cursor: pointer; font-size: 12px; font-weight: 500; color: var(--acs-muted); font-family: 'Lato', sans-serif; }
   .stage-btn.active { background: var(--acs-blue); color: #fff; border-color: var(--acs-blue); }
   .stage-btn.conditional { border-style: dashed; border-color: var(--acs-gold); }
+  .stage-btn.gap { box-shadow: inset 0 -2px 0 var(--acs-gold); }
   .stage-btn.conditional.active { background: var(--role-decision); border-color: var(--role-decision); }
   .stage-btn:hover:not(.active) { border-color: var(--acs-blue); color: var(--acs-blue); }
   .stage-nav .spacer { flex: 1; }
@@ -158,6 +159,7 @@
 <nav class="pa-bar" id="paBar"></nav>
 
 <div id="workflowView">
+  <div class="notice"><strong>v2 — reconciled with Talkov’s Litify buildout (June 2026).</strong> Stage names map to their task-template list (Intake · Onboarding · Complaint · Filing · Service · Default · Motions · Referee/Sale · Closing). Stages marked ▲ are gaps in the current buildout: Pre-Lit Demand, PRPA Track, and Accounting & Fees / common-benefit tagging. Doc-generation tool is under evaluation (HotDocs vs Titan vs Docrio vs others).</div>
   <section class="summary" id="summary"></section>
   <nav class="stage-nav" id="stageNav"></nav>
   <div class="canvas-wrap">
@@ -211,63 +213,66 @@ const PLAN = {
   caseType: 'Partition',
   stakeholders: 'Intake → Attorney → Paralegal/Associate → Court · Referee · Broker → Finance',
   duration: '4–8 mo if PRPA buyout · 12–18 mo modal sale · 24–48 mo if contested offsets',
-  drivers: 'Absolute right to partition · PRPA applicability · Buyout election · Manner (sale vs in-kind) · Offsets · § 874.040 common-benefit fees'
+  drivers: 'Absolute right to partition · PRPA applicability · Buyout election · Manner (sale vs in-kind) · Offsets · Trust-deed fee security · § 874.040 common-benefit recovery (gap in current buildout)'
 };
 
 const STAGES = [
   { id:'overview', name:'Overview' },
-  { id:'intake',  name:'1. Intake & Qualification' },
-  { id:'consult', name:'2. Consultation & Engagement' },
-  { id:'prelit',  name:'3. Pre-Lit Investigation & Demand' },
-  { id:'plead',   name:'4. Pleadings & Lis Pendens' },
-  { id:'disc',    name:'5. Motions & Discovery' },
-  { id:'prpa',    name:'6. PRPA Track', conditional:true },
-  { id:'ij',      name:'7. Interlocutory Judgment' },
-  { id:'sale',    name:'8. Manner of Partition' },
-  { id:'acct',    name:'9. Accounting & Offsets' },
-  { id:'fees',    name:'10. Final Judgment & Fees' },
-  { id:'close',   name:'11. Distribution & Closeout' }
+  { id:'intake',   name:'1. Intake & Qualification' },
+  { id:'engage',   name:'2. Engagement & Onboarding' },
+  { id:'prelit',   name:'3. Pre-Lit Investigation & Demand', gap:true },
+  { id:'plead',    name:'4. Complaint & Lis Pendens' },
+  { id:'service',  name:'5. Service & Default' },
+  { id:'disc',     name:'6. Motions & Discovery' },
+  { id:'prpa',     name:'7. PRPA Track', conditional:true, gap:true },
+  { id:'ij',       name:'8. Interlocutory Judgment & Referee' },
+  { id:'sale',     name:'9. Manner of Partition' },
+  { id:'acctfees', name:'10. Accounting, Fees & Final Judgment', gap:true },
+  { id:'close',    name:'11. Distribution & Closeout' }
 ];
 
-// Stage meta: duration, owners, exit gate (litify_pm__Guidance_for_success__c), and stage switches
+// Stage meta: duration, owners, exit gate (litify_pm__Guidance_for_success__c), Talkov template mapping, and stage switches
 const STAGE_META = {
-  intake: { days:'1–5 days', owners:'Intake Director · Paralegal',
-    exitGate:'Intake form complete; conflicts cleared on all named co-owners; CA real property in TIC confirmed; consultation booked on attorney calendar.',
-    switches:[ { to:'consult', label:'Consultation booked → Switch to Stage 2', primary:true } ] },
-  consult: { days:'1–3 days', owners:'Attorney · Paralegal',
-    exitGate:'Engagement letter executed; retainer collected or contingency documented; Matter created in Litify with plan applied.',
-    switches:[ { to:'prelit', label:'Retained → Switch to Stage 3', primary:true },
-               { to:null, label:'Decline / Refer Out → Close Matter (Closed: Withdrawn)' } ] },
-  prelit: { days:'10–30 days', owners:'Paralegal · Associate · Partner',
-    exitGate:'Preliminary title report on file; cotenancy fractions confirmed on Role records; demand sent and response window expired without settlement.',
-    switches:[ { to:'plead', label:'No settlement → Switch to Stage 4', primary:true },
-               { to:'close', label:'Settles pre-suit → Switch to Stage 11 (Closed: Settled)' } ] },
-  plead: { days:'1–45 days', owners:'Associate · Paralegal · Process Server',
-    exitGate:'Complaint filed and served on all parties; lis pendens recorded with certified-mail proof in every county; answer or default in place for every defendant.',
-    switches:[ { to:'disc', label:'All parties answered/defaulted → Switch to Stage 5', primary:true } ] },
-  disc: { days:'120–300 days', owners:'Partner · Associate · Paralegal',
+  intake: { days:'1\u20135 days', owners:'Intake Director \u00b7 Paralegal', talkov:'Intake',
+    exitGate:'Intake form complete; conflicts cleared on property address; CA real property in TIC confirmed (Factory-enriched); consultation booked on attorney calendar.',
+    switches:[ { to:'engage', label:'Consultation booked \u2192 Switch to Stage 2', primary:true } ] },
+  engage: { days:'1\u20137 days', owners:'Attorney \u00b7 Paralegal \u00b7 Finance', talkov:'Onboarding',
+    exitGate:'Engagement letter e-signed; trust deed notarized and recorded (fee security); billing configured (retainer \u00b7 flat-fee categories \u00b7 trust/IOLTA); Matter created in Litify with plan applied.',
+    switches:[ { to:'prelit', label:'Retained \u2192 Switch to Stage 3', primary:true },
+               { to:null, label:'Decline / Refer Out \u2192 Close (Closed: Withdrawn)' } ] },
+  prelit: { days:'10\u201330 days', owners:'Paralegal \u00b7 Associate \u00b7 Partner', talkov:'\u2014 not in template list',
+    gapNote:'Talkov\u2019s task templates jump from Onboarding to Complaint \u2014 there is no pre-lit demand stage. Most partition matters settle at the demand window; recommended addition.',
+    exitGate:'Preliminary title report on file; deed history abstracted; cotenancy fractions confirmed on Role records; demand sent and response window expired without settlement.',
+    switches:[ { to:'plead', label:'No settlement \u2192 Switch to Stage 4', primary:true },
+               { to:'close', label:'Settles pre-suit \u2192 Switch to Stage 11 (Closed: Settled)' } ] },
+  plead: { days:'1\u201310 days', owners:'Associate \u00b7 Partner \u00b7 Paralegal', talkov:'Complaint \u00b7 Filing',
+    exitGate:'Verified complaint filed; lis pendens generated, recorded in every property county, and \u00a7 405.22 certified-mail proof captured.',
+    switches:[ { to:'service', label:'Filed + lis pendens recorded \u2192 Switch to Stage 5', primary:true } ] },
+  service: { days:'30\u201375 days', owners:'Paralegal \u00b7 Process Server \u00b7 Associate', talkov:'Service \u00b7 Default',
+    exitGate:'All cotenants served with proof tracked; answer deadlines calendared (CalendarRules); answer or default in place for every defendant.',
+    switches:[ { to:'disc', label:'All parties answered/defaulted \u2192 Switch to Stage 6', primary:true } ] },
+  disc: { days:'120\u2013300 days', owners:'Partner \u00b7 Associate \u00b7 Paralegal', talkov:'Motions',
     exitGate:'Right to partition established (MSA, stipulation, or trial); FMV expert designated; case postured for PRPA determination or interlocutory judgment.',
-    switches:[ { to:'prpa', label:'PRPA applies (§ 874.313) → Switch to Stage 6', primary:true },
-               { to:'ij', label:'PRPA does not apply → Switch to Stage 7' },
-               { to:'close', label:'Settles in discovery → Switch to Stage 11 (Closed: Settled)' } ] },
-  prpa: { days:'60–180 days', owners:'Court · Appraiser · Attorney · Cotenant', statute:'CCP §§ 874.311–874.323',
+    switches:[ { to:'prpa', label:'PRPA applies (\u00a7 874.313) \u2192 Switch to Stage 7', primary:true },
+               { to:'ij', label:'PRPA does not apply \u2192 Switch to Stage 8' },
+               { to:'close', label:'Settles in discovery \u2192 Switch to Stage 11 (Closed: Settled)' } ] },
+  prpa: { days:'60\u2013180 days', owners:'Court \u00b7 Appraiser \u00b7 Attorney \u00b7 Cotenant', statute:'CCP \u00a7\u00a7 874.311\u2013874.323', talkov:'\u2014 not in template list',
+    gapNote:'PRPA is absent from the buildout. Any TIC without a written partition agreement triggers court-ordered appraisal and the 45-day buyout right \u2014 needs its own stage plus the 10/30/45/60 clocks (formula fields + CalendarRules).',
     exitGate:'Buyout closed (PRPA exit) OR open-market sale confirmed OR PRPA-route in-kind partition ordered.',
-    switches:[ { to:'close', label:'Buyout funds & closes → Switch to Stage 11 (Closed: Settled)', primary:true },
-               { to:'ij', label:'No buyout → Switch to Stage 7 (manner determination)' } ] },
-  ij: { days:'30–90 days', owners:'Partner · Judge · Referee',
+    switches:[ { to:'close', label:'Buyout funds & closes \u2192 Switch to Stage 11 (Closed: Settled)', primary:true },
+               { to:'ij', label:'No buyout \u2192 Switch to Stage 8 (manner determination)' } ] },
+  ij: { days:'30\u201390 days', owners:'Partner \u00b7 Judge \u00b7 Referee', talkov:'Referee/Sale',
     exitGate:'Interlocutory judgment entered determining all fractional interests and ordering partition; referee qualified, oath filed, bond posted if required.',
-    switches:[ { to:'sale', label:'Referee qualified → Switch to Stage 8', primary:true } ] },
-  sale: { days:'90–240 days', owners:'Referee · Broker · Court',
+    switches:[ { to:'sale', label:'Referee qualified \u2192 Switch to Stage 9', primary:true } ] },
+  sale: { days:'90\u2013240 days', owners:'Referee \u00b7 Broker \u00b7 Court', talkov:'Referee/Sale',
     exitGate:'Sale closed and proceeds held in trust by referee, OR in-kind allocation final and confirmed by court.',
-    switches:[ { to:'acct', label:'Escrow closed / division confirmed → Switch to Stage 9', primary:true } ] },
-  acct: { days:'60–120 days', owners:'Paralegal · Associate · Partner · CPA',
-    exitGate:'Court-approved schedule of charges & credits per cotenant; net distribution per cotenant calculated.',
-    switches:[ { to:'fees', label:'Accounting schedule approved → Switch to Stage 10', primary:true } ] },
-  fees: { days:'30–90 days', owners:'Partner · Judge',
-    exitGate:'Final judgment of partition entered; § 874.040 fee/cost order entered; common-benefit fee recovery realized from tagged time.',
-    switches:[ { to:'close', label:'Fee order entered → Switch to Stage 11', primary:true } ] },
-  close: { days:'30–60 days', owners:'Referee · Paralegal · Title',
-    exitGate:'All proceeds distributed per court order; deeds recorded; referee discharged; lis pendens released in every county; Matter Status = Closed: Completed.',
+    switches:[ { to:'acctfees', label:'Escrow closed / division confirmed \u2192 Switch to Stage 10', primary:true } ] },
+  acctfees: { days:'90\u2013210 days', owners:'Paralegal \u00b7 Associate \u00b7 Partner \u00b7 CPA \u00b7 Judge', talkov:'\u2014 not in template list',
+    gapNote:'No accounting/offsets or fee-apportionment stage exists in the buildout \u2014 and common-benefit tagging appears nowhere in the plan. Without at-entry Y/N tagging on every time entry, \u00a7 874.040 fee recovery is forfeited.',
+    exitGate:'Court-approved schedule of charges & credits per cotenant; final judgment entered; \u00a7 874.040 fee/cost order entered from common-benefit-tagged time.',
+    switches:[ { to:'close', label:'Fee order entered \u2192 Switch to Stage 11', primary:true } ] },
+  close: { days:'30\u201360 days', owners:'Referee \u00b7 Paralegal \u00b7 Title', talkov:'Closing',
+    exitGate:'All proceeds distributed per court order; deeds recorded; trust deed reconveyed at payoff; referee discharged; lis pendens released in every county; Matter Status = Closed: Completed.',
     switches:[] }
 };
 
@@ -291,104 +296,110 @@ const TEAM_ROLE = { 'Intake':'Intake Specialist', 'Paralegal':'Paralegal', 'Asso
 
 const TASKS = {
   intake: [
-    { n:1, name:'Lead capture', detail:'Website form, (877) PARTITION, or referral — Intake record auto-created (litify_pm__Intake__c)', role:R.sys, kind:'automation', due:'Real-time', deps:'—' },
-    { n:2, name:'Send intake form', detail:'Questionnaire, fee disclosure, document checklist — auto-fired on Intake create', role:R.sys, kind:'automation', due:'On Intake create', deps:'#1' },
-    { n:3, name:'Follow up until form complete', detail:'Cadence day 1 · 3 · 7 — SMS + email + call; abandon at day 14', role:R.intake, due:'Day 1 / 3 / 7', deps:'#2' },
-    { n:4, name:'Multi-party conflict check', detail:'Every named co-owner across all 7 offices (litify_pm__COI_Search__c)', role:R.para, cite:'CRPC 1.7', gate:true, due:'Form complete + 1 day', deps:'#3' },
-    { n:5, name:'Property & ownership pre-screen', detail:'Confirm CA real property held in TIC; capture FMV estimate, mortgage, occupancy', role:R.intake, due:'During qualification', deps:'#3' },
-    { n:6, name:'Geo-route to office', detail:'Match property county to nearest of 7 offices; assign attorney by capacity', role:R.sys, kind:'automation', due:'On conflicts clear', deps:'#4' },
-    { n:7, name:'Book consultation on calendar', detail:'Push to attorney Outlook with prep packet attached', role:R.intake, gate:true, due:'Conflicts clear + 1 day', deps:'#4, #6' }
+    { n:1, name:'Website / chatbot lead \u2192 Factory push', detail:'Website forms + chatbot push all viable lead-source data (page, contact, UTM) to Factory, then into litify_pm__Intake__c', role:R.sys, kind:'automation', due:'Real-time', deps:'\u2014' },
+    { n:2, name:'RingCentral inbound triggers Factory lookup', detail:'Inbound call populates the contact and fires Factory address enrichment', role:R.sys, kind:'automation', due:'Real-time', deps:'\u2014' },
+    { n:3, name:'Factory enrichment: property facts + equity', detail:'Address \u2192 Factory \u2192 property facts and equity estimate (Property Radar API) populate Intake / Property', role:R.sys, kind:'automation', due:'On address capture', deps:'#1, #2' },
+    { n:4, name:'Send intake form + follow up to completion', detail:'Questionnaire, fee disclosure, document checklist; cadence day 1 \u00b7 3 \u00b7 7; abandon at day 14', role:R.intake, due:'Day 1 / 3 / 7', deps:'#1' },
+    { n:5, name:'Conflict check \u2014 property address first', detail:'Run conflicts against the property address (parties, related parties, trusts/entities in a later phase)', role:R.para, cite:'CRPC 1.7', gate:true, due:'Address captured + same day', deps:'#3' },
+    { n:6, name:'Property & ownership pre-screen', detail:'Confirm CA real property held in TIC; FMV estimate, mortgage, occupancy \u2014 pre-populated by Factory', role:R.intake, due:'During qualification', deps:'#3' },
+    { n:7, name:'Geo-route to office', detail:'Match property county to nearest of 7 offices; assign attorney by capacity', role:R.sys, kind:'automation', due:'On conflicts clear', deps:'#5' },
+    { n:8, name:'Book consultation on calendar', detail:'Automated scheduling with prep packet attached', role:R.intake, gate:true, due:'Conflicts clear + 1 day', deps:'#5, #7' }
   ],
-  consult: [
-    { n:1, name:'Conduct consultation', detail:'Facts, ownership map, goal (sale vs buyout vs in-kind), fee structure', role:R.atty, gate:true, due:'Booked consult date', deps:'—' },
+  engage: [
+    { n:1, name:'Conduct consultation', detail:'Facts, ownership map, goal (sale vs buyout vs in-kind), fee structure', role:R.atty, gate:true, due:'Booked consult date', deps:'\u2014' },
     { n:2, name:'Retain / Decline / Refer-Out decision', detail:'Stage-switch gateway: signed engagement, declined, or referred to a non-partition firm', role:R.atty, kind:'gateway', due:'Consult day', deps:'#1' },
-    { n:3, name:'Prepare engagement letter', detail:'Talkov contingency template or hourly; cites contingency-eligibility test', role:R.sys, kind:'automation', due:'On Keep decision', deps:'#2' },
-    { n:4, name:'Sign engagement letter', detail:'E-signature; client acknowledges fee structure', role:R.atty, gate:true, due:'#3 + 3 days', deps:'#3' },
-    { n:5, name:'Collect retainer or document contingency', detail:'LawPay/Stripe for retainer; for contingency, equity-positive analysis to file', role:R.para, due:'#4 + 1 day', deps:'#4' },
-    { n:6, name:'Convert Intake → Matter in Litify', detail:'litify_pm__Matter__c created; Matter Plan auto-applied via Case Type = Partition; Stage 3 tasks instantiate', role:R.sys, kind:'automation', gate:true, due:'On signature', deps:'#4' }
+    { n:3, name:'Generate engagement letter + trust deed', detail:'Doc automation (tool TBD \u2014 HotDocs / Titan under evaluation); monthly billing terms', role:R.sys, kind:'automation', due:'On Keep decision', deps:'#2' },
+    { n:4, name:'E-sign engagement letter', detail:'E-signature; client acknowledges monthly billing + fee terms', role:R.atty, gate:true, due:'#3 + 3 days', deps:'#3' },
+    { n:5, name:'E-notarize trust deed', detail:'E-notary integration (Notarize) for the trust deed securing fees', role:R.para, due:'#4 + 2 days', deps:'#4' },
+    { n:6, name:'Record trust deed', detail:'Deed of trust recorded \u2014 fee security; reconveyed at payoff (payoff@ automation candidate)', role:R.para, gate:true, due:'#5 + 5 days', deps:'#5' },
+    { n:7, name:'Billing setup: retainer \u00b7 flat-fee categories \u00b7 trust/IOLTA', detail:'LawPay/Confido retainer; flat-fee billing categories on the timekeeping screen; trust workflow', role:R.fin, due:'On retain', deps:'#2' },
+    { n:8, name:'Convert Intake \u2192 Matter in Litify', detail:'litify_pm__Matter__c created; Matter Plan auto-applied via Case Type = Partition; Stage 3 tasks instantiate', role:R.sys, kind:'automation', gate:true, due:'On signature', deps:'#4' }
   ],
   prelit: [
-    { n:1, name:'Order preliminary title report', detail:'Vesting deed, encumbrances, prior lis pendens', role:R.para, gate:true, due:'Stage start', deps:'—' },
-    { n:2, name:'Chain-of-title abstract', detail:'Pinpoint when TIC was created — matters for PRPA TIC-without-agreement test', role:R.assoc, due:'#1 + 7 days', deps:'#1' },
+    { n:1, name:'Order preliminary title report', detail:'Vesting deed, encumbrances, prior lis pendens', role:R.para, gate:true, due:'Stage start', deps:'\u2014' },
+    { n:2, name:'Chain-of-title abstract / deed history', detail:'Deed-history layout; pinpoint when TIC was created \u2014 PRPA TIC-without-agreement test', role:R.assoc, due:'#1 + 7 days', deps:'#1' },
     { n:3, name:'Build cotenancy ledger (initial)', detail:'One litify_pm__Role__c per co-owner (Role = Cotenant); fractional %, capacity, opening contributions', role:R.para, cite:'litify_pm__Role__c', due:'#1 + 7 days', deps:'#1' },
-    { n:4, name:'Collect contribution records', detail:'Mortgage, taxes, insurance, repairs, improvements, rents — feeds Wallace v. Daley analysis', role:R.para, due:'Stage start + 14 days', deps:'—' },
-    { n:5, name:'Demand letter', detail:'Cite LEG Investments v. Boxler (absolute right to partition); preview offsets per Wallace / Hunter', role:R.atty, kind:'automation', due:'#3 + 3 days', deps:'#2, #3' },
-    { n:6, name:'Settlement window', detail:'Stage-switch gateway: 14–21 days; log all communications; settle (→ Stage 11) or proceed (→ Stage 4)', role:R.assoc, kind:'gateway', due:'Demand + 14–21 days', deps:'#5' }
+    { n:4, name:'Collect contribution records', detail:'Mortgage, taxes, insurance, repairs, improvements, rents \u2014 feeds Wallace v. Daley analysis', role:R.para, due:'Stage start + 14 days', deps:'\u2014' },
+    { n:5, name:'Demand letter', detail:'Doc automation; cite LEG Investments v. Boxler (absolute right to partition); preview offsets per Wallace / Hunter', role:R.atty, kind:'automation', due:'#3 + 3 days', deps:'#2, #3' },
+    { n:6, name:'Settlement window', detail:'Stage-switch gateway: 14\u201321 days; log all communications; settle (\u2192 Stage 11) or proceed (\u2192 Stage 4)', role:R.assoc, kind:'gateway', due:'Demand + 14\u201321 days', deps:'#5' }
   ],
   plead: [
-    { n:1, name:'Draft verified complaint', detail:'§ 872.230 contents: property, interest, basis, manner sought', role:R.assoc, cite:'CCP § 872.230', gate:true, due:'Stage start + 5 days', deps:'—' },
-    { n:2, name:'Partner review of complaint', detail:'Verification with client', role:R.partner, gate:true, due:'#1 + 2 days', deps:'#1' },
-    { n:3, name:'E-file complaint', detail:'County portal; record case number on Matter (litify_pm__Docket_Number__c)', role:R.para, gate:true, due:'#2 + 1 day', deps:'#2' },
-    { n:4, name:'Record lis pendens — every county', detail:'Notice of Pendency, certified mail per § 405.22; defective service = expungement risk', role:R.sys, kind:'automation', cite:'CCP § 872.250', gate:true, due:'Immediately on filing', deps:'#3' },
-    { n:5, name:'Issue summons', detail:'Packets per defendant', role:R.para, due:'#3 + 1 day', deps:'#3' },
-    { n:6, name:'Serve all cotenants', detail:'Multi-state if any cotenant out-of-state; process server tracked per defendant', role:R.ext, cite:'CCP § 412.20', gate:true, due:'#5 + 30 days', deps:'#5' },
-    { n:7, name:'Track answers / cross-complaints', detail:'Typical: answer + cross-complaint for accounting/offsets', role:R.assoc, gate:true, due:'Service + 30 days', deps:'#6' },
-    { n:8, name:'Default prove-up', detail:'Shortcut to interlocutory judgment if applicable', role:R.assoc, cite:'CRC 3.110', due:'As applicable', deps:'#7' }
+    { n:1, name:'Draft verified complaint (complaint set build)', detail:'Complaint-set doc automation: complaint, exhibits, civil cover \u2014 \u00a7 872.230 contents', role:R.assoc, cite:'CCP \u00a7 872.230', gate:true, due:'Stage start + 5 days', deps:'\u2014' },
+    { n:2, name:'Partner review + client verification', detail:'Verification under penalty of perjury with client', role:R.partner, gate:true, due:'#1 + 2 days', deps:'#1' },
+    { n:3, name:'E-file complaint', detail:'County portal; case number captured on litify_pm__Docket_Number__c', role:R.para, gate:true, due:'#2 + 1 day', deps:'#2' },
+    { n:4, name:'Generate lis pendens \u2014 every county (lis pendens build)', detail:'Doc automation generates a Notice of Pendency per Property county; one Lis_Pendens__c record each', role:R.sys, kind:'automation', cite:'CCP \u00a7 872.250', gate:true, due:'Immediately on filing', deps:'#3' },
+    { n:5, name:'Record lis pendens + \u00a7 405.22 certified-mail service', detail:'Record in every county; certified-mail proof captured \u2014 defective service = expungement risk', role:R.para, gate:true, due:'#4 + 1 day', deps:'#4' }
+  ],
+  service: [
+    { n:1, name:'Issue summons packets per defendant', detail:'Packets per defendant from Role records', role:R.para, due:'Filing + 1 day', deps:'\u2014' },
+    { n:2, name:'Serve all cotenants (Infotrack / process server)', detail:'Multi-state if any cotenant out-of-state', role:R.ext, cite:'CCP \u00a7 412.20', gate:true, due:'#1 + 30 days', deps:'#1' },
+    { n:3, name:'Proof-of-service tracking', detail:'Who must be served via the Role \u201cinclude on Proof of Service\u201d flag; POS documents logged', role:R.para, due:'Per service', deps:'#2' },
+    { n:4, name:'Answer deadlines calendared', detail:'CalendarRules court-deadline calendaring on service dates', role:R.sys, kind:'automation', due:'On service', deps:'#2' },
+    { n:5, name:'Track answers / cross-complaints', detail:'Typical: answer + cross-complaint for accounting/offsets', role:R.assoc, gate:true, due:'Service + 30 days', deps:'#4' },
+    { n:6, name:'Default prove-up', detail:'Shortcut to interlocutory judgment if applicable', role:R.assoc, cite:'CRC 3.110', due:'As applicable', deps:'#5' }
   ],
   disc: [
-    { n:1, name:'Initial disclosures', detail:'Mandatory per CCP § 2016.090', role:R.assoc, cite:'§ 2016.090', gate:true, due:'Stage start + 60 days', deps:'—' },
-    { n:2, name:'Written discovery', detail:'RFPs, SROGs, RFAs on title, mortgages, occupancy, contributions', role:R.assoc, cite:'§§ 2030/2031/2033', due:'#1 + 14 days', deps:'#1' },
-    { n:3, name:'Real-estate subpoenas', detail:'Escrow, lender, broker, HOA records', role:R.para, cite:'§ 2020.410', due:'#2 + 7 days', deps:'#2' },
-    { n:4, name:'Depositions of cotenants', detail:'Possession, contributions, ouster, settlement positions', role:R.partner, cite:'§ 2025', due:'Per schedule', deps:'#2' },
-    { n:5, name:'Designate appraiser / experts', detail:'FMV, CPA forensic if multi-year, great-prejudice expert if in-kind disputed', role:R.assoc, cite:'§ 2034.210', gate:true, due:'Per case schedule', deps:'#2' },
-    { n:6, name:'Defend lis pendens expungement', detail:'§ 405.32 probable validity; § 405.38 fee shift', role:R.partner, cite:'§§ 405.30–405.38', gate:true, due:'As filed', deps:'—' },
-    { n:7, name:'MSA on right to partition', detail:'The workhorse motion — Capuccio + LEG Investments; establishes right without trial', role:R.partner, cite:'CCP §§ 437c, 872.710', gate:true, due:'Discovery substantially complete', deps:'#4, #5' }
+    { n:1, name:'Initial disclosures', detail:'Mandatory per CCP \u00a7 2016.090', role:R.assoc, cite:'\u00a7 2016.090', gate:true, due:'Stage start + 60 days', deps:'\u2014' },
+    { n:2, name:'Written discovery', detail:'RFPs, SROGs, RFAs on title, mortgages, occupancy, contributions', role:R.assoc, cite:'\u00a7\u00a7 2030/2031/2033', due:'#1 + 14 days', deps:'#1' },
+    { n:3, name:'Real-estate subpoenas', detail:'Escrow, lender, broker, HOA records', role:R.para, cite:'\u00a7 2020.410', due:'#2 + 7 days', deps:'#2' },
+    { n:4, name:'Depositions of cotenants', detail:'Possession, contributions, ouster, settlement positions', role:R.partner, cite:'\u00a7 2025', due:'Per schedule', deps:'#2' },
+    { n:5, name:'Designate appraiser / experts', detail:'FMV, CPA forensic if multi-year, great-prejudice expert if in-kind disputed', role:R.assoc, cite:'\u00a7 2034.210', gate:true, due:'Per case schedule', deps:'#2' },
+    { n:6, name:'Defend lis pendens expungement', detail:'\u00a7 405.32 probable validity; \u00a7 405.38 fee shift', role:R.partner, cite:'\u00a7\u00a7 405.30\u2013405.38', gate:true, due:'As filed', deps:'\u2014' },
+    { n:7, name:'MSA on right to partition', detail:'The workhorse motion \u2014 Capuccio + LEG Investments; establishes right without trial', role:R.partner, cite:'CCP \u00a7\u00a7 437c, 872.710', gate:true, due:'Discovery substantially complete', deps:'#4, #5' }
   ],
   prpa: [
-    { n:1, name:'Court determines PRPA applicability', detail:'Stage-switch gateway: TIC + no written partition agreement + filed on/after 1/1/2023 — sua sponte or on motion', role:R.ext, kind:'gateway', cite:'§ 874.313', due:'On motion / sua sponte', deps:'—' },
-    { n:2, name:'Court-ordered appraisal', detail:'Disinterested CA-licensed appraiser; sworn FMV', role:R.ext, cite:'§ 874.316', gate:true, due:'Per court order', deps:'#1' },
-    { n:3, name:'Notice of Fair Market Value', detail:'Clock 1: mailed within 10 days of receipt of appraisal', role:R.ext, kind:'automation', cite:'§ 874.316(c)', gate:true, due:'Appraisal + 10 days', deps:'#2' },
-    { n:4, name:'FMV objection hearing', detail:'Clock 2: not less than 30 days after notice', role:R.partner, cite:'§ 874.316(d)–(e)', gate:true, due:'Notice + 30 days', deps:'#3' },
-    { n:5, name:'Notice of buyout right', detail:'Clock 3: cotenants have 45 days to elect', role:R.ext, kind:'automation', cite:'§ 874.317(a)', gate:true, due:'Post-FMV confirmation', deps:'#4' },
-    { n:6, name:'Cotenant buyout election', detail:'Stage-switch gateway: buy partitioning cotenant at FMV × fractional share; multiple electors share pro rata', role:R.ext, kind:'gateway', cite:'§ 874.317(b)', due:'Notice + 45 days', deps:'#5' },
-    { n:7, name:'Buyout funding window', detail:'Clock 4: purchase price deposited within 60 days of election', role:R.ext, cite:'§ 874.317(d)', gate:true, due:'Election + 60 days', deps:'#6' },
-    { n:8, name:'If no buyout — manner determination', detail:'Partition in kind unless great prejudice; otherwise open-market sale', role:R.ext, kind:'gateway', cite:'§ 874.318', due:'Election window expired', deps:'#6' },
-    { n:9, name:'Open-market sale via broker', detail:'List at not less than appraised value; sealed bids permitted', role:R.ext, cite:'§ 874.319', due:'Per court order', deps:'#8' },
-    { n:10, name:'Court confirmation of open-market sale', detail:'Proceeds held subject to accounting', role:R.ext, cite:'§ 874.319(d)', gate:true, due:'Per court calendar', deps:'#9' }
+    { n:1, name:'Court determines PRPA applicability', detail:'Stage-switch gateway: TIC + no written partition agreement + filed on/after 1/1/2023 \u2014 sua sponte or on motion', role:R.ext, kind:'gateway', cite:'\u00a7 874.313', due:'On motion / sua sponte', deps:'\u2014' },
+    { n:2, name:'Court-ordered appraisal', detail:'Disinterested CA-licensed appraiser; sworn FMV \u2014 lands on Property.Appraised_Value__c', role:R.ext, cite:'\u00a7 874.316', gate:true, due:'Per court order', deps:'#1' },
+    { n:3, name:'Notice of Fair Market Value', detail:'Clock 1: mailed within 10 days of appraisal \u2014 formula deadline + CalendarRules reminder', role:R.ext, kind:'automation', cite:'\u00a7 874.316(c)', gate:true, due:'Appraisal + 10 days', deps:'#2' },
+    { n:4, name:'FMV objection hearing', detail:'Clock 2: not less than 30 days after notice', role:R.partner, cite:'\u00a7 874.316(d)\u2013(e)', gate:true, due:'Notice + 30 days', deps:'#3' },
+    { n:5, name:'Notice of buyout right', detail:'Clock 3: cotenants have 45 days to elect \u2014 formula deadline + CalendarRules reminder', role:R.ext, kind:'automation', cite:'\u00a7 874.317(a)', gate:true, due:'Post-FMV confirmation', deps:'#4' },
+    { n:6, name:'Cotenant buyout election', detail:'Stage-switch gateway: buy partitioning cotenant at FMV \u00d7 fractional share; multiple electors share pro rata', role:R.ext, kind:'gateway', cite:'\u00a7 874.317(b)', due:'Notice + 45 days', deps:'#5' },
+    { n:7, name:'Buyout funding window', detail:'Clock 4: purchase price deposited within 60 days of election', role:R.ext, cite:'\u00a7 874.317(d)', gate:true, due:'Election + 60 days', deps:'#6' },
+    { n:8, name:'If no buyout \u2014 manner determination', detail:'Partition in kind unless great prejudice; otherwise open-market sale', role:R.ext, kind:'gateway', cite:'\u00a7 874.318', due:'Election window expired', deps:'#6' },
+    { n:9, name:'Open-market sale via broker', detail:'List at not less than appraised value; sealed bids permitted', role:R.ext, cite:'\u00a7 874.319', due:'Per court order', deps:'#8' },
+    { n:10, name:'Court confirmation of open-market sale', detail:'Proceeds held subject to accounting', role:R.ext, cite:'\u00a7 874.319(d)', gate:true, due:'Per court calendar', deps:'#9' }
   ],
   ij: [
-    { n:1, name:'Prepare interlocutory judgment', detail:'§ 872.720: determines right + interests, orders manner, appoints referee — milestone billing event', role:R.partner, cite:'CCP § 872.720', gate:true, due:'Stage start + 14 days', deps:'—' },
-    { n:2, name:'Stipulate or litigate manner', detail:'Stage-switch gateway: in kind / by sale / by appraisal (only if all stipulate — Cummings v. Dessel)', role:R.partner, kind:'gateway', cite:'§ 873.510', due:'With IJ submission', deps:'#1' },
-    { n:3, name:'Propose referee', detail:'Often a real-estate attorney or licensed broker', role:R.partner, cite:'§ 873.010', due:'With IJ submission', deps:'#1' },
-    { n:4, name:'Referee oath', detail:'Within 10 days of appointment', role:R.ext, cite:'§ 873.040', gate:true, due:'Appointment + 10 days', deps:'#3' },
-    { n:5, name:'Referee bond', detail:'If court orders — court discretion', role:R.ext, cite:'§ 873.010(b)(2)', due:'Per court order', deps:'#3' },
+    { n:1, name:'Prepare interlocutory judgment', detail:'\u00a7 872.720: determines right + interests, orders manner, appoints referee \u2014 milestone billing event', role:R.partner, cite:'CCP \u00a7 872.720', gate:true, due:'Stage start + 14 days', deps:'\u2014' },
+    { n:2, name:'Stipulate or litigate manner', detail:'Stage-switch gateway: in kind / by sale / by appraisal (only if all stipulate \u2014 Cummings v. Dessel)', role:R.partner, kind:'gateway', cite:'\u00a7 873.510', due:'With IJ submission', deps:'#1' },
+    { n:3, name:'Propose referee', detail:'Often a real-estate attorney or licensed broker', role:R.partner, cite:'\u00a7 873.010', due:'With IJ submission', deps:'#1' },
+    { n:4, name:'Referee oath', detail:'Within 10 days of appointment', role:R.ext, cite:'\u00a7 873.040', gate:true, due:'Appointment + 10 days', deps:'#3' },
+    { n:5, name:'Referee bond', detail:'If court orders \u2014 court discretion', role:R.ext, cite:'\u00a7 873.010(b)(2)', due:'Per court order', deps:'#3' },
     { n:6, name:'Referee engagement meeting', detail:'Property walkthrough, prior offers, recommended manner', role:R.ext, due:'Oath + 7 days', deps:'#4' }
   ],
   sale: [
-    { n:1, name:'Sale or in-kind?', detail:'Stage-switch gateway: modal outcome is sale; in-kind only where division would not cause great prejudice', role:R.ext, kind:'gateway', cite:'§§ 873.210, 873.510', due:'Per IJ', deps:'—' },
-    { n:2, name:'Listing agreement', detail:'Referee retains broker under § 873.060; commission rate set', role:R.ext, cite:'§ 873.060', gate:true, due:'IJ + 14 days', deps:'#1' },
-    { n:3, name:'Marketing period', detail:'MLS, open houses, price adjustments', role:R.ext, cite:'§ 873.610', due:'Listing + 30–90 days', deps:'#2' },
-    { n:4, name:'Acceptance of offer (court-subject)', detail:'PSA executed', role:R.ext, cite:'§ 873.620', due:'Per market', deps:'#3' },
-    { n:5, name:'Notice of sale', detail:'≥10 days before confirmation hearing', role:R.sys, kind:'automation', cite:'§ 873.640', gate:true, due:'Hearing − 10 days', deps:'#4' },
-    { n:6, name:'Referee’s report of sale', detail:'Describes terms, marketing, proceeds', role:R.ext, cite:'§ 873.710', gate:true, due:'With confirmation motion', deps:'#4' },
-    { n:7, name:'MTC sale + overbid math', detail:'§ 873.740 statutory minimum: 10% over first $10K + 5% over balance — auto-calculated', role:R.partner, kind:'automation', cite:'§§ 873.730, 873.740', gate:true, due:'Confirmation hearing', deps:'#6' },
-    { n:8, name:'Court order confirming sale → escrow close', detail:'Deed recorded; proceeds wired to referee trust; payoffs', role:R.ext, gate:true, due:'Confirmation + 30–45 days', deps:'#7' },
-    { n:9, name:'In-kind survey & division', detail:'Conditional path — surveyor; referee divides; court confirms', role:R.ext, cite:'§§ 873.210–873.290', due:'If in-kind ordered', deps:'#1' }
+    { n:1, name:'Sale or in-kind?', detail:'Stage-switch gateway: modal outcome is sale; in-kind only where division would not cause great prejudice', role:R.ext, kind:'gateway', cite:'\u00a7\u00a7 873.210, 873.510', due:'Per IJ', deps:'\u2014' },
+    { n:2, name:'Listing agreement', detail:'Referee retains broker under \u00a7 873.060; commission rate set', role:R.ext, cite:'\u00a7 873.060', gate:true, due:'IJ + 14 days', deps:'#1' },
+    { n:3, name:'Marketing period', detail:'MLS, open houses, price adjustments', role:R.ext, cite:'\u00a7 873.610', due:'Listing + 30\u201390 days', deps:'#2' },
+    { n:4, name:'Acceptance of offer (court-subject)', detail:'PSA executed', role:R.ext, cite:'\u00a7 873.620', due:'Per market', deps:'#3' },
+    { n:5, name:'Notice of sale', detail:'\u226510 days before confirmation hearing', role:R.sys, kind:'automation', cite:'\u00a7 873.640', gate:true, due:'Hearing \u2212 10 days', deps:'#4' },
+    { n:6, name:'Referee\u2019s report of sale', detail:'Describes terms, marketing, proceeds', role:R.ext, cite:'\u00a7 873.710', gate:true, due:'With confirmation motion', deps:'#4' },
+    { n:7, name:'MTC sale + overbid math', detail:'\u00a7 873.740 statutory minimum: 10% over first $10K + 5% over balance \u2014 auto-calculated', role:R.partner, kind:'automation', cite:'\u00a7\u00a7 873.730, 873.740', gate:true, due:'Confirmation hearing', deps:'#6' },
+    { n:8, name:'Court order confirming sale \u2192 escrow close', detail:'Deed recorded; proceeds wired to referee trust; payoffs', role:R.ext, gate:true, due:'Confirmation + 30\u201345 days', deps:'#7' },
+    { n:9, name:'In-kind survey & division', detail:'Conditional path \u2014 surveyor; referee divides; court confirms', role:R.ext, cite:'\u00a7\u00a7 873.210\u2013873.290', due:'If in-kind ordered', deps:'#1' }
   ],
-  acct: [
-    { n:1, name:'Mortgage / tax / insurance contributions', detail:'Credits per Hunter v. Schultz / Willmon v. Koyer', role:R.para, cite:'Hunter v. Schultz', gate:true, due:'Stage start + 14 days', deps:'—' },
-    { n:2, name:'Necessary repairs & improvements', detail:'Repairs at cost; improvements at lesser of cost or value enhancement (Wallace v. Daley)', role:R.para, cite:'Wallace v. Daley', due:'Stage start + 14 days', deps:'—' },
+  acctfees: [
+    { n:1, name:'Mortgage / tax / insurance contributions', detail:'Credits per Hunter v. Schultz / Willmon v. Koyer', role:R.para, cite:'Hunter v. Schultz', gate:true, due:'Stage start + 14 days', deps:'\u2014' },
+    { n:2, name:'Necessary repairs & improvements', detail:'Repairs at cost; improvements at lesser of cost or value enhancement (Wallace v. Daley)', role:R.para, cite:'Wallace v. Daley', due:'Stage start + 14 days', deps:'\u2014' },
     { n:3, name:'Rental value offset', detail:'Defensive use against credits when cotenant in exclusive possession', role:R.assoc, cite:'Hunter; Wallace', gate:true, due:'#1 + 7 days', deps:'#1' },
-    { n:4, name:'Ouster analysis', detail:'If pled — affirmative rents/profits recovery; mere exclusive occupancy insufficient', role:R.partner, cite:'Estate of Hughes', due:'#3 + 7 days', deps:'#3' },
+    { n:4, name:'Ouster analysis', detail:'If pled \u2014 affirmative rents/profits recovery; mere exclusive occupancy insufficient', role:R.partner, cite:'Estate of Hughes', due:'#3 + 7 days', deps:'#3' },
     { n:5, name:'Forensic CPA engagement', detail:'Multi-year cases or flow-through entity owners', role:R.fin, due:'As needed', deps:'#1, #2' },
-    { n:6, name:'Settle or try offsets', detail:'Stage-switch gateway: stipulated accounting (modal) or short-cause trial', role:R.partner, kind:'gateway', cite:'CCP § 872.140', due:'Schedules complete', deps:'#1–#5' },
-    { n:7, name:'Submit final accounting schedule', detail:'With motion for final judgment — generated from Expense / contribution records', role:R.sys, kind:'automation', gate:true, due:'On #6 resolution', deps:'#6' }
-  ],
-  fees: [
-    { n:1, name:'Draft final judgment', detail:'Confirms manner, incorporates accounting, allocates net proceeds', role:R.partner, cite:'§§ 872.730, 874.210', gate:true, due:'Stage start + 14 days', deps:'—' },
-    { n:2, name:'Tag time entries: common-benefit Y/N', detail:'At-entry workflow on litify_pm__Time_Entry__c.Common_Benefit__c — fee shifting only realizes if categorized at entry', role:R.all, kind:'automation', cite:'CCP § 874.040', gate:true, crit:true, due:'Continuous — enforced at entry', deps:'—' },
-    { n:3, name:'Motion for fee apportionment', detail:'Pro-rata default with broad equitable discretion', role:R.partner, cite:'Orien v. Lutz; Lin v. Jeng', gate:true, due:'Judgment + 30 days', deps:'#1' },
-    { n:4, name:'Fee declaration with common-benefit tagging', detail:'Capuccio v. Caire; Forrest v. Elam — generated from tagged Time Entries', role:R.partner, cite:'Capuccio v. Caire', due:'With #3', deps:'#2, #3' },
-    { n:5, name:'Fee hearing & order', detail:'Court rules on apportionment', role:R.ext, gate:true, due:'Per court calendar', deps:'#3, #4' }
+    { n:6, name:'Settle or try offsets', detail:'Stage-switch gateway: stipulated accounting (modal) or short-cause trial', role:R.partner, kind:'gateway', cite:'CCP \u00a7 872.140', due:'Schedules complete', deps:'#1\u2013#5' },
+    { n:7, name:'Submit final accounting schedule', detail:'With motion for final judgment \u2014 generated from Expense / contribution records', role:R.sys, kind:'automation', gate:true, due:'On #6 resolution', deps:'#6' },
+    { n:8, name:'Draft final judgment', detail:'Confirms manner, incorporates accounting, allocates net proceeds', role:R.partner, cite:'\u00a7\u00a7 872.730, 874.210', gate:true, due:'#7 + 14 days', deps:'#7' },
+    { n:9, name:'Tag time entries: common-benefit Y/N', detail:'At-entry tagging on litify_pm__Time_Entry__c \u2014 GAP: absent from the Talkov buildout; \u00a7 874.040 recovery is forfeited without it', role:R.all, kind:'automation', cite:'CCP \u00a7 874.040', gate:true, crit:true, due:'Continuous \u2014 enforced at entry', deps:'\u2014' },
+    { n:10, name:'Motion for fee apportionment', detail:'Pro-rata default with broad equitable discretion', role:R.partner, cite:'Orien v. Lutz; Lin v. Jeng', gate:true, due:'Judgment + 30 days', deps:'#8' },
+    { n:11, name:'Fee declaration from tagged time', detail:'Capuccio v. Caire; Forrest v. Elam \u2014 generated from tagged Time Entries', role:R.partner, cite:'Capuccio v. Caire', due:'With #10', deps:'#9, #10' },
+    { n:12, name:'Fee hearing & order', detail:'Court rules on apportionment; fees paid from proceeds before distribution', role:R.ext, gate:true, due:'Per court calendar', deps:'#10, #11' }
   ],
   close: [
-    { n:1, name:'Disbursement instructions', detail:'To escrow / referee per final judgment + fee order', role:R.ext, gate:true, due:'Fee order + 7 days', deps:'—' },
-    { n:2, name:'Wire funds to all parties', detail:'Reconcile to penny — litify_pm__Resolution__c + Disbursement records', role:R.fin, gate:true, due:'#1 + 7 days', deps:'#1' },
+    { n:1, name:'Disbursement instructions', detail:'To escrow / referee per final judgment + fee order', role:R.ext, gate:true, due:'Fee order + 7 days', deps:'\u2014' },
+    { n:2, name:'Wire funds to all parties', detail:'Reconcile to penny \u2014 litify_pm__Resolution__c + Disbursement records', role:R.fin, gate:true, due:'#1 + 7 days', deps:'#1' },
     { n:3, name:'Record deeds (in-kind cases)', detail:'Allocation deeds per court-confirmed division', role:R.para, due:'As applicable', deps:'#1' },
-    { n:4, name:'Release lis pendens — every county', detail:'Withdrawal recorded in every county where recorded', role:R.sys, kind:'automation', gate:true, due:'#2 + 7 days', deps:'#2' },
-    { n:5, name:'Final accounting & referee discharge', detail:'Referee files final account; court discharges', role:R.ext, cite:'§ 873.010(b)(4)', gate:true, due:'#2 + 30 days', deps:'#2' },
-    { n:6, name:'Client closeout & NPS', detail:'Final letter, retention package, referral ask', role:R.partner, kind:'automation', due:'#2 + 7 days', deps:'#2' },
-    { n:7, name:'Close Matter in Litify', detail:'litify_pm__Status__c = Closed: Completed; litify_pm__Closed_Date__c stamped; archive; release conflict locks', role:R.para, gate:true, due:'All tasks complete', deps:'#1–#6' }
+    { n:4, name:'Release lis pendens \u2014 every county', detail:'Withdrawal recorded in every county; closeout blocked until all released', role:R.sys, kind:'automation', gate:true, due:'#2 + 7 days', deps:'#2' },
+    { n:5, name:'Reconvey trust deed at payoff', detail:'Fees satisfied from proceeds \u2014 trust deed reconveyed (payoff@ inbox automation candidate)', role:R.para, gate:true, due:'#2 + 14 days', deps:'#2' },
+    { n:6, name:'Final accounting & referee discharge', detail:'Referee files final account; court discharges', role:R.ext, cite:'\u00a7 873.010(b)(4)', gate:true, due:'#2 + 30 days', deps:'#2' },
+    { n:7, name:'Close Matter in Litify', detail:'litify_pm__Status__c = Closed: Completed; litify_pm__Closed_Date__c stamped; archive; release conflict locks', role:R.para, gate:true, due:'All tasks complete', deps:'#1\u2013#6' }
   ]
 };
 // ============================================================
@@ -408,23 +419,23 @@ const PALETTE = `
   classDef closed fill:#E8E8E8,stroke:#616161,color:#1A1A1A,stroke-dasharray:5 3`;
 
 function planOverview() { return `flowchart LR
-  s1["1 · Intake &<br/>Qualification"]:::stage --> s2["2 · Consultation &<br/>Engagement"]:::stage
+  s1["1 \u00b7 Intake &<br/>Qualification"]:::stage --> s2["2 \u00b7 Engagement &<br/>Onboarding"]:::stage
   s2 --> d1{"Retain?"}:::dec
-  d1 -->|Retained| s3["3 · Pre-Lit<br/>Demand"]:::stage
+  d1 -->|Retained| s3["3 \u00b7 Pre-Lit<br/>Demand \u25b2"]:::stage
   d1 -->|Decline / Refer| cw["Closed: Withdrawn"]:::closed
   s3 --> d2{"Settle<br/>pre-suit?"}:::dec
-  d2 -->|Yes| s11["11 · Distribution<br/>& Closeout"]:::stage
-  d2 -->|No| s4["4 · Pleadings &<br/>Lis Pendens"]:::stage
-  s4 --> s5["5 · Motions &<br/>Discovery"]:::stage
-  s5 --> d3{"PRPA applies?<br/>§ 874.313"}:::dec
-  d3 -->|Yes| s6["6 · PRPA Track<br/>10/30/45/60 clocks"]:::stagec
-  d3 -->|No| s7["7 · Interlocutory<br/>Judgment"]:::stage
-  s6 --> d4{"Buyout?"}:::dec
+  d2 -->|Yes| s11["11 \u00b7 Distribution<br/>& Closeout"]:::stage
+  d2 -->|No| s4["4 \u00b7 Complaint &<br/>Lis Pendens"]:::stage
+  s4 --> s5["5 \u00b7 Service &<br/>Default"]:::stage
+  s5 --> s6["6 \u00b7 Motions &<br/>Discovery"]:::stage
+  s6 --> d3{"PRPA applies?<br/>\u00a7 874.313"}:::dec
+  d3 -->|Yes| s7["7 \u00b7 PRPA Track \u25b2<br/>10/30/45/60 clocks"]:::stagec
+  d3 -->|No| s8["8 \u00b7 Interlocutory<br/>Judgment & Referee"]:::stage
+  s7 --> d4{"Buyout?"}:::dec
   d4 -->|Closes| s11
-  d4 -->|No buyout| s7
-  s7 --> s8["8 · Manner of<br/>Partition"]:::stage
-  s8 --> s9["9 · Accounting<br/>& Offsets"]:::stage
-  s9 --> s10["10 · Final Judgment<br/>& Fees"]:::stage
+  d4 -->|No buyout| s8
+  s8 --> s9["9 \u00b7 Manner of<br/>Partition"]:::stage
+  s9 --> s10["10 \u00b7 Accounting,<br/>Fees & Judgment \u25b2"]:::stage
   s10 --> s11
   s11 --> cc["Closed: Completed /<br/>Settled / Stipulated"]:::closed
   ${PALETTE}`; }
@@ -433,37 +444,45 @@ function stageDiagram(stageId) {
   const D = (label, cls) => `["${label}"]:::${cls}`;
   switch(stageId) {
     case 'intake': return `flowchart LR
-      a${D('Lead Capture<br/>litify_pm__Intake__c','sys')}
-      b${D('Send Intake Form','sys')}
-      c${D('Followup Day 1·3·7','intake')}
-      d${D('Multi-Party Conflicts<br/>all named co-owners','para')}
-      e${D('Property Pre-Screen<br/>CA TIC confirmed','intake')}
-      f${D('Geo-Route to Office','sys')}
-      g${D('Book Consultation','intake')}
-      a-->b-->c-->d-->f-->g
-      c-->e-->g
+      a${D('Website / Chatbot Lead<br/>\u2192 Factory Push','sys')}
+      b${D('RingCentral Inbound<br/>Triggers Factory','sys')}
+      c${D('Factory Enrichment<br/>property facts + equity','sys')}
+      d${D('Intake Form +<br/>Followup Day 1\u00b73\u00b77','intake')}
+      e${D('Conflict Check<br/>property address first','para')}
+      f${D('Property Pre-Screen<br/>CA TIC confirmed','intake')}
+      g${D('Geo-Route to Office','sys')}
+      h${D('Book Consultation','intake')}
+      a-->c
+      b-->c
+      a-->d
+      c-->e-->g-->h
+      c-->f-->h
       ${PALETTE}`;
-    case 'consult': return `flowchart LR
+    case 'engage': return `flowchart LR
       a${D('Conduct Consultation','atty')}
-      b{"Retain · Decline ·<br/>Refer Out?"}:::dec
-      c${D('Engagement Letter<br/>(template automation)','sys')}
-      d${D('Sign Engagement Letter','atty')}
-      e${D('Retainer / Contingency<br/>Documented','para')}
-      f${D('Intake → Matter Conversion<br/>Plan applied by Case Type','sys')}
-      g${D('Closed: Withdrawn','ext')}
+      b{"Retain \u00b7 Decline \u00b7<br/>Refer Out?"}:::dec
+      c${D('Generate Engagement +<br/>Trust Deed (doc automation TBD)','sys')}
+      d${D('E-Sign Engagement Letter','atty')}
+      e${D('E-Notarize Trust Deed','para')}
+      f${D('Record Trust Deed<br/>fee security','para')}
+      g${D('Billing Setup<br/>flat-fee \u00b7 trust/IOLTA','fin')}
+      h${D('Intake \u2192 Matter Conversion<br/>Plan applied by Case Type','sys')}
+      i${D('Closed: Withdrawn','ext')}
       a-->b
       b-->|Keep|c-->d-->e-->f
-      b-->|Decline / Refer|g
+      b-->|Keep|g
+      d-->h
+      b-->|Decline / Refer|i
       ${PALETTE}`;
     case 'prelit': return `flowchart LR
       a${D('Order Preliminary<br/>Title Report','para')}
-      b${D('Chain-of-Title Abstract<br/>PRPA eligibility','assoc')}
+      b${D('Chain-of-Title /<br/>Deed History','assoc')}
       c${D('Cotenancy Ledger<br/>litify_pm__Role__c per owner','para')}
       d${D('Collect Contribution<br/>Records','para')}
-      e${D('Demand Letter<br/>LEG Investments v. Boxler','atty')}
-      f{"Settle within<br/>14–21 days?"}:::dec
-      g${D('Switch → Stage 4 Pleadings','sys')}
-      h${D('Switch → Stage 11 Closeout<br/>Closed: Settled','sys')}
+      e${D('Demand Letter<br/>(doc automation)','atty')}
+      f{"Settle within<br/>14\u201321 days?"}:::dec
+      g${D('Switch \u2192 Stage 4 Complaint','sys')}
+      h${D('Switch \u2192 Stage 11 Closeout<br/>Closed: Settled','sys')}
       a-->b-->e
       a-->c-->e
       d-->e-->f
@@ -471,43 +490,49 @@ function stageDiagram(stageId) {
       f-->|Yes|h
       ${PALETTE}`;
     case 'plead': return `flowchart LR
-      a${D('Draft Verified Complaint<br/>§ 872.230','assoc')}
-      b${D('Partner Review','atty')}
+      a${D('Draft Verified Complaint<br/>complaint set build \u00a7 872.230','assoc')}
+      b${D('Partner Review +<br/>Client Verification','atty')}
       c${D('E-File Complaint','para')}
-      d${D('Record Lis Pendens<br/>EVERY county · § 405.22 mail','sys')}
-      e${D('Issue Summons','para')}
-      f${D('Serve All Cotenants','ext')}
-      g${D('Track Answers /<br/>Cross-Complaints','assoc')}
-      h${D('Default Prove-Up<br/>CRC 3.110','assoc')}
-      a-->b-->c-->d
-      c-->e-->f-->g-->h
+      d${D('Generate Lis Pendens<br/>per County (build)','sys')}
+      e${D('Record + \u00a7 405.22<br/>Certified-Mail Proof','para')}
+      a-->b-->c-->d-->e
+      ${PALETTE}`;
+    case 'service': return `flowchart LR
+      a${D('Issue Summons<br/>per defendant','para')}
+      b${D('Serve All Cotenants<br/>Infotrack / process server','ext')}
+      c${D('Proof-of-Service Tracking<br/>Role POS flags','para')}
+      d${D('Answer Deadlines<br/>CalendarRules','sys')}
+      e${D('Track Answers /<br/>Cross-Complaints','assoc')}
+      f${D('Default Prove-Up<br/>CRC 3.110','assoc')}
+      a-->b-->c
+      b-->d-->e-->f
       ${PALETTE}`;
     case 'disc': return `flowchart LR
-      a${D('Initial Disclosures<br/>§ 2016.090','assoc')}
-      b${D('Written Discovery<br/>RFP · SROG · RFA','assoc')}
+      a${D('Initial Disclosures<br/>\u00a7 2016.090','assoc')}
+      b${D('Written Discovery<br/>RFP \u00b7 SROG \u00b7 RFA','assoc')}
       c${D('Real-Estate Subpoenas','para')}
       d${D('Depositions of Cotenants','atty')}
-      e${D('Designate Appraiser /<br/>Experts § 2034.210','assoc')}
+      e${D('Designate Appraiser /<br/>Experts \u00a7 2034.210','assoc')}
       f${D('Defend Lis Pendens<br/>Expungement','atty')}
-      g${D('MSA on Right to Partition<br/>Capuccio · LEG','atty')}
+      g${D('MSA on Right to Partition<br/>Capuccio \u00b7 LEG','atty')}
       a-->b-->c
       b-->d-->g
       b-->e-->g
       f-->g
       ${PALETTE}`;
     case 'prpa': return `flowchart LR
-      a{"PRPA Applies?<br/>§ 874.313"}:::dec
-      b${D('Court-Ordered Appraisal<br/>§ 874.316','ext')}
+      a{"PRPA Applies?<br/>\u00a7 874.313"}:::dec
+      b${D('Court-Ordered Appraisal<br/>\u00a7 874.316','ext')}
       c${D('Notice of FMV<br/>10-day clock','sys')}
       d${D('FMV Objection Hearing<br/>30-day clock','atty')}
       e${D('Notice of Buyout Right<br/>45-day clock','sys')}
       f{"Cotenant Buyout<br/>Election?"}:::dec
       g${D('Funding Window<br/>60-day clock','ext')}
-      h${D('Switch → Stage 11<br/>Buyout closes','sys')}
-      i{"Manner § 874.318"}:::dec
-      j${D('Open-Market Sale<br/>via Broker § 874.319','ext')}
+      h${D('Switch \u2192 Stage 11<br/>Buyout closes','sys')}
+      i{"Manner \u00a7 874.318"}:::dec
+      j${D('Open-Market Sale<br/>via Broker \u00a7 874.319','ext')}
       k${D('Court Confirmation','ext')}
-      l${D('Switch → Stage 7 IJ','sys')}
+      l${D('Switch \u2192 Stage 8 IJ','sys')}
       a-->|Yes|b-->c-->d-->e-->f
       f-->|Elects|g-->h
       f-->|No election|i
@@ -515,10 +540,10 @@ function stageDiagram(stageId) {
       i-->|In-kind / no PRPA route|l
       ${PALETTE}`;
     case 'ij': return `flowchart LR
-      a${D('Prepare Interlocutory<br/>Judgment § 872.720','atty')}
-      b{"Manner: Sale ·<br/>In-Kind · Appraisal?"}:::dec
-      c${D('Propose Referee<br/>§ 873.010','atty')}
-      d${D('Referee Oath<br/>10 days § 873.040','ext')}
+      a${D('Prepare Interlocutory<br/>Judgment \u00a7 872.720','atty')}
+      b{"Manner: Sale \u00b7<br/>In-Kind \u00b7 Appraisal?"}:::dec
+      c${D('Propose Referee<br/>\u00a7 873.010','atty')}
+      d${D('Referee Oath<br/>10 days \u00a7 873.040','ext')}
       e${D('Referee Bond<br/>if ordered','ext')}
       f${D('Referee Engagement<br/>Meeting','ext')}
       a-->b-->c-->d-->f
@@ -526,52 +551,48 @@ function stageDiagram(stageId) {
       ${PALETTE}`;
     case 'sale': return `flowchart LR
       a{"Sale or In-Kind?"}:::dec
-      b${D('Listing Agreement<br/>§ 873.060','ext')}
+      b${D('Listing Agreement<br/>\u00a7 873.060','ext')}
       c${D('Marketing Period','ext')}
       d${D('Accept Offer<br/>court-subject','ext')}
-      e${D('Notice of Sale<br/>≥10 days','sys')}
-      f${D("Referee's Report<br/>of Sale § 873.710",'ext')}
-      g${D('MTC + Overbid<br/>§ 873.740 math','sys')}
+      e${D('Notice of Sale<br/>\u226510 days','sys')}
+      f${D("Referee's Report<br/>of Sale \u00a7 873.710",'ext')}
+      g${D('MTC + Overbid<br/>\u00a7 873.740 math','sys')}
       h${D('Confirmation +<br/>Escrow Close','ext')}
       i${D('In-Kind Survey<br/>+ Division','ext')}
       a-->|Sale|b-->c-->d-->e
       d-->f-->g-->h
       a-->|In-Kind|i
       ${PALETTE}`;
-    case 'acct': return `flowchart LR
-      a${D('Mortgage / Tax / Insurance<br/>Credits — Hunter','para')}
+    case 'acctfees': return `flowchart LR
+      a${D('Mortgage / Tax / Insurance<br/>Credits \u2014 Hunter','para')}
       b${D('Repairs + Improvements<br/>Wallace v. Daley','para')}
       c${D('Rental Value Offset','assoc')}
       d${D('Ouster Analysis<br/>Estate of Hughes','atty')}
       e${D('Forensic CPA','fin')}
       f{"Settle or Try<br/>Offsets?"}:::dec
       g${D('Final Accounting Schedule<br/>auto-generated','sys')}
+      h${D('Draft Final Judgment<br/>\u00a7\u00a7 872.730, 874.210','atty')}
+      i${D('Common-Benefit Tagging<br/>at entry \u2014 GAP','sys')}
+      j${D('\u00a7 874.040 Fee Motion<br/>Orien \u00b7 Lin','atty')}
+      k${D('Fee Hearing + Order','ext')}
       a-->f
       b-->f
       c-->d-->f
-      e-->f-->g
-      ${PALETTE}`;
-    case 'fees': return `flowchart LR
-      a${D('Draft Final Judgment<br/>§§ 872.730, 874.210','atty')}
-      b${D('Common-Benefit Tagging<br/>at entry — Time_Entry__c','sys')}
-      c${D('§ 874.040 Fee Motion<br/>Orien · Lin','atty')}
-      d${D('Fee Declaration<br/>from tagged time','atty')}
-      e${D('Fee Hearing + Order','ext')}
-      a-->c-->d-->e
-      b-->d
+      e-->f-->g-->h-->j
+      i-->j-->k
       ${PALETTE}`;
     case 'close': return `flowchart LR
       a${D('Disbursement Instructions','ext')}
-      b${D('Wire Funds · Reconcile<br/>Resolution + Disbursement','fin')}
+      b${D('Wire Funds \u00b7 Reconcile<br/>Resolution + Disbursement','fin')}
       c${D('Record Deeds<br/>in-kind cases','para')}
       d${D('Release Lis Pendens<br/>EVERY county','sys')}
-      e${D('Referee Final Account<br/>+ Discharge','ext')}
-      f${D('Client Closeout + NPS','atty')}
-      g${D('Matter Status →<br/>Closed: Completed','sys')}
+      e${D('Reconvey Trust Deed<br/>at payoff','para')}
+      f${D('Referee Final Account<br/>+ Discharge','ext')}
+      g${D('Matter Status \u2192<br/>Closed: Completed','sys')}
       a-->b-->d-->g
       a-->c
-      b-->e-->g
-      b-->f
+      b-->e
+      b-->f-->g
       ${PALETTE}`;
   }
   return '';
@@ -614,6 +635,8 @@ function objectModelDiagram() { return `flowchart LR
     exp["litify_pm__Expense__c"]:::pkg
     neg["litify_pm__Negotiation__c"]:::pkg
     res["litify_pm__Resolution__c<br/>+ Disbursement"]:::pkg
+    prop["Property__c (custom)<br/>parcel · county · vesting ·<br/>Factory equity · appraisal"]:::gold
+    td["Trust_Deed__c (custom)<br/>fee security · e-notarized ·<br/>recorded · reconveyed"]:::gold
     lp["Lis_Pendens__c (custom)<br/>county · doc # · recorded ·<br/>released · § 405.22 proof"]:::gold
   end
   mp -.->|applied by Case Type<br/>on Matter create| m
@@ -626,6 +649,8 @@ function objectModelDiagram() { return `flowchart LR
   neg --- m
   res --- m
   lp --- m
+  prop --- m
+  td --- m
   classDef pkg fill:#E8F0FE,stroke:#0057B8,stroke-width:2px,color:#1A1A1A
   classDef std fill:#ECEFF1,stroke:#7F8C8D,stroke-width:2px,color:#1A1A1A
   classDef gold fill:#FFF1B8,stroke:#FFD700,stroke-width:2.5px,color:#1A1A1A`; }
@@ -641,10 +666,12 @@ const MODEL_OBJECTS = [
   { api:'Task', pkg:'standard', label:'Task (standard object)', purpose:'Litify does NOT use a custom task object. Generated tasks are standard Tasks pinned to the matter and to the specific stage activity. Org picklist adds Status values like "N/A" for swept tasks.', fields:'litify_pm__Matter__c · litify_pm__Matter_Stage_Activity__c · Status (Open / Completed / N/A) · ActivityDate · OwnerId (resolved from team role)' },
   { api:'litify_pm__Matter_Team_Member__c / litify_pm__Matter_Team_Role__c', pkg:'managed', label:'Matter Team', purpose:'Role-based assignment: Default Matter Tasks point at a Team Role; the matter team resolves it to a user. Roles for this build: Intake Specialist, Paralegal, Associate Attorney, Partner, Handling Attorney, Finance.', fields:'litify_pm__Default_Matter_Team__c + Members apply on create' },
   { api:'litify_pm__Intake__c', pkg:'managed', label:'Intake', purpose:'Stages 1–2 run here before conversion. Conversion stamps litify_pm__Matter__c and creates the Matter with plan applied.', fields:'litify_pm__Status__c · litify_pm__Qualified__c · litify_pm__IsConverted__c · litify_pm__Retainer_Agreement_Signed__c · UTM/source fields' },
-  { api:'litify_pm__Role__c', pkg:'managed', label:'Role (party model)', purpose:'THE cotenancy ledger. One Role per co-owner: litify_pm__Party__c → Account, Role = "Cotenant". Custom fields carry fractional interest and contribution rollups.', fields:'litify_pm__Party__c · litify_pm__Matter__c · litify_pm__Role__c picklist · litify_pm__Parent_Role__c + Fractional_Interest__c (custom) · Opening_Contributions__c (custom)' },
-  { api:'litify_pm__Time_Entry__c', pkg:'managed', label:'Time Entry', purpose:'Timekeeping. THE partition-critical custom: Common_Benefit__c (Y / N / Mixed) tagged at entry — § 874.040 fee recovery is forfeited without it. Validation rule blocks save when blank.', fields:'litify_pm__Matter__c · litify_pm__Task_Type__c · litify_pm__Team_Member__c + Common_Benefit__c (CUSTOM, required)' },
+  { api:'litify_pm__Role__c', pkg:'managed', label:'Role (party model)', purpose:'THE cotenancy ledger. One Role per co-owner: litify_pm__Party__c → Account, Role = "Cotenant". Custom fields carry fractional interest and contribution rollups.', fields:'litify_pm__Party__c · litify_pm__Matter__c · litify_pm__Role__c picklist · litify_pm__Parent_Role__c + customs: Fractional_Interest__c · Opening_Contributions__c · Include_on_POS__c (proof of service) · Role_Order__c' },
+  { api:'litify_pm__Time_Entry__c', pkg:'managed', label:'Time Entry', purpose:'Timekeeping with flat-fee billing categories (in buildout). THE partition-critical custom is Common_Benefit__c (Y / N / Mixed) tagged at entry — absent from the buildout; § 874.040 fee recovery is forfeited without it. Validation rule blocks save when blank.', fields:'litify_pm__Matter__c · litify_pm__Task_Type__c · litify_pm__Team_Member__c + customs: Flat_Fee_Category__c · Common_Benefit__c (required — GAP)' },
   { api:'litify_pm__Expense__c / litify_pm__Negotiation__c / litify_pm__Resolution__c', pkg:'managed', label:'Money objects', purpose:'Expenses feed the accounting schedule (Stage 9). Negotiation tracks demand/counter rounds (Stage 3). Resolution + Resolution Split + Disbursement carry settlement and distribution (Stages 8–11).', fields:'litify_pm__Matter__c lookups throughout · litify_pm__Payor__c · litify_pm__Negotiating_with__c → Role' },
-  { api:'Lis_Pendens__c', pkg:'custom', label:'Lis Pendens (custom object)', purpose:'One record per county recording: county, instrument #, recorded date, § 405.22 certified-mail proof, released date. Drives the Stage 4 record-everywhere automation and the Stage 11 release-everywhere sweep.', fields:'Matter__c · County__c · Instrument_Number__c · Recorded_Date__c · Service_Proof__c · Released_Date__c' },
+  { api:'Property__c', pkg:'custom', label:'Property (custom object)', purpose:'One per parcel — in Talkov’s buildout as the Property UI + deed-history layout, enriched by Factory (Property Radar equity). Drives geo-routing, the address-first conflict check, PRPA eligibility, and county-by-county lis pendens.', fields:'Matter__c · APN__c · Address__c · County__c · Vesting__c · FMV_Estimate__c · Equity__c (Factory) · Appraised_Value__c · Occupancy__c' },
+  { api:'Trust_Deed__c', pkg:'custom', label:'Trust Deed (custom object)', purpose:'Talkov secures fees with a deed of trust at engagement: e-signed, e-notarized (Notarize), recorded, and reconveyed at payoff (payoff@ inbox automation candidate). Stage 2 gates + Stage 11 reconveyance.', fields:'Matter__c · Signed_Date__c · Notarized_Date__c · Recorded_Date__c · Instrument_Number__c · Reconveyed_Date__c' },
+  { api:'Lis_Pendens__c', pkg:'custom', label:'Lis Pendens (custom object)', purpose:'One record per property per county recording: county, instrument #, recorded date, § 405.22 certified-mail proof, released date. Drives the Stage 4 record-everywhere automation and the Stage 11 release-everywhere sweep.', fields:'Matter__c · Property__c · County__c · Instrument_Number__c · Recorded_Date__c · Service_Proof__c · Released_Date__c' },
   { api:'litify_pm__COI_Search__c / litify_pm__COI_Search_Result__c', pkg:'managed', label:'Conflicts', purpose:'Multi-party conflict checks across all named co-owners at intake (Stage 1 gate).', fields:'Search per party · results reviewed by Paralegal' }
 ];
 
@@ -652,12 +679,12 @@ const MODEL_OBJECTS = [
 // STAGE SWITCH RULES (operational transitions)
 // ============================================================
 const SWITCH_RULES = [
-  { from:'2. Consultation', trigger:'Retain / Decline / Refer-Out gateway', yes:'Intake converts → Matter created, plan applied, Stage 3 activates', no:'Matter never opens — Intake → Turned Down / Referred (Closed: Withdrawn if matter existed)' },
-  { from:'3. Pre-Lit Demand', trigger:'Settlement window gateway (14–21 days)', yes:'Settles → switch direct to Stage 11 Closeout · Closed: Settled', no:'Switch to Stage 4 Pleadings' },
-  { from:'5. Discovery', trigger:'PRPA applicability (§ 874.313)', yes:'Switch to Stage 6 PRPA Track', no:'Skip Stage 6 → switch to Stage 7 Interlocutory Judgment' },
-  { from:'6. PRPA Track', trigger:'Buyout election + 60-day funding (§ 874.317)', yes:'Buyout closes → switch to Stage 11 · Closed: Settled', no:'Switch to Stage 7 (or PRPA open-market sale → Stage 9)' },
-  { from:'8. Manner of Partition', trigger:'Sale-or-in-kind gateway (per IJ)', yes:'Sale track: listing → confirmation → escrow', no:'In-kind track: survey → division → court confirmation' },
-  { from:'9. Accounting', trigger:'Settle-or-try-offsets gateway (§ 872.140)', yes:'Stipulated accounting (modal) → Stage 10', no:'Short-cause trial on offsets → Stage 10' }
+  { from:'2. Engagement & Onboarding', trigger:'Retain / Decline / Refer-Out gateway', yes:'Intake converts \u2192 Matter created, plan applied, Stage 3 activates', no:'No matter \u2014 Intake \u2192 Turned Down / Referred (Closed: Withdrawn)' },
+  { from:'3. Pre-Lit Demand \u25b2', trigger:'Settlement window gateway (14\u201321 days)', yes:'Settles \u2192 switch direct to Stage 11 Closeout \u00b7 Closed: Settled', no:'Switch to Stage 4 Complaint & Lis Pendens' },
+  { from:'6. Motions & Discovery', trigger:'PRPA applicability (\u00a7 874.313)', yes:'Switch to Stage 7 PRPA Track', no:'Skip Stage 7 \u2192 switch to Stage 8 Interlocutory Judgment' },
+  { from:'7. PRPA Track \u25b2', trigger:'Buyout election + 60-day funding (\u00a7 874.317)', yes:'Buyout closes \u2192 switch to Stage 11 \u00b7 Closed: Settled', no:'Switch to Stage 8 (or PRPA open-market sale \u2192 Stage 10)' },
+  { from:'9. Manner of Partition', trigger:'Sale-or-in-kind gateway (per IJ)', yes:'Sale track: listing \u2192 confirmation \u2192 escrow', no:'In-kind track: survey \u2192 division \u2192 court confirmation' },
+  { from:'10. Accounting & Fees \u25b2', trigger:'Settle-or-try-offsets gateway (\u00a7 872.140)', yes:'Stipulated accounting (modal) \u2192 final judgment + \u00a7 874.040 fee motion', no:'Short-cause trial on offsets \u2192 final judgment' }
 ];
 
 // ============================================================
@@ -714,24 +741,23 @@ const EXTRA_DETAILS = [
   { match:['Closed: Completed / Settled','Closed: Completed /'], role:'sys', title:'Closure Statuses', desc:'litify_pm__Status__c closure reasons on the Matter: Closed: Completed (full partition through final judgment and distribution), Closed: Settled (pre-suit settlement, discovery settlement, or PRPA buyout), Closed: Stipulated (stipulated dismissal or stipulated accounting). litify_pm__Closed_Date__c and litify_pm__Closed_Reason__c stamp for closed-matter reporting.' },
   { match:['Closed: Settled','Closed: Completed','Closed: Stipulated','Closure'], role:'sys', title:'Closure Status', desc:'litify_pm__Status__c closure reason stamped with litify_pm__Closed_Date__c and litify_pm__Closed_Reason__c — drives closed-matter reporting (outcome, cycle time, net fees).' },
   { match:['Switch → Stage 11 Buyout','Switch → Stage 11 Closeout'], role:'sys', title:'Stage Switch · Jump to Closeout', desc:'Non-linear stage switch — the matter resolves early (pre-suit settlement or PRPA buyout) and jumps directly to Stage 11, skipping all intervening stages. The flow repoints litify_pm__Matter__c.litify_pm__Matter_Stage_Activity__c to the Stage 11 activity, sweeps still-open tasks from skipped stages to Status = N/A, instantiates the closeout tasks, and sets litify_pm__Status__c = Closed: Settled at completion.' },
-  { match:['Switch → Stage 7'], role:'sys', title:'Stage Switch · PRPA exits to Interlocutory Judgment', desc:'When PRPA does not produce a buyout (no election, or funding window expires), the matter switches to Stage 7. The court proceeds to manner determination under § 874.318 / interlocutory judgment under § 872.720. Flow repoints the stage lookup and generates Stage 7 default tasks.' },
+  { match:['Switch → Stage 8'], role:'sys', title:'Stage Switch · PRPA exits to Interlocutory Judgment', desc:'When PRPA does not produce a buyout (no election, or funding window expires), the matter switches to Stage 8. The court proceeds to manner determination under § 874.318 / interlocutory judgment under § 872.720. Flow repoints the stage lookup and generates Stage 7 default tasks.' },
   { match:['Switch → Stage 4'], role:'sys', title:'Stage Switch · Proceed to Pleadings', desc:'Demand window expired without settlement — the matter switches to Stage 4. Stage 4 default tasks (complaint, lis pendens, service) instantiate from litify_pm__Default_Matter_Task__c on stage activation.' },
   { match:['Switch →','Advance to'], role:'sys', title:'Stage Switch', desc:'A stage switch repoints litify_pm__Matter__c.litify_pm__Matter_Stage_Activity__c to the target stage activity. The record-triggered flow stamps Set_As_Active_At__c, sweeps still-open tasks of other stages to Status = N/A, and instantiates the target stage\'s Default Matter Tasks with owners resolved from the matter team.' }
 ];
 
-// Diagram node label → task lookup, per stage (first match wins — order matters)
 const NODE_TASK_MAP = {
-  intake:  [['Lead Capture',1],['Send Intake Form',2],['Followup',3],['Multi-Party Conflicts',4],['Property Pre-Screen',5],['Geo-Route',6],['Book Consultation',7]],
-  consult: [['Conduct Consultation',1],['Sign Engagement Letter',4],['Engagement Letter',3],['Retainer / Contingency',5],['Matter Conversion',6]],
-  prelit:  [['Preliminary Title Report',1],['Chain-of-Title',2],['Cotenancy Ledger',3],['Contribution Records',4],['Demand Letter',5]],
-  plead:   [['Draft Verified Complaint',1],['Partner Review',2],['E-File Complaint',3],['Record Lis Pendens',4],['Issue Summons',5],['Serve All Cotenants',6],['Track Answers',7],['Default Prove-Up',8]],
-  disc:    [['Initial Disclosures',1],['Written Discovery',2],['Real-Estate Subpoenas',3],['Depositions of Cotenants',4],['Designate Appraiser',5],['Expungement',6],['MSA on Right',7]],
-  prpa:    [['Court-Ordered Appraisal',2],['Notice of FMV',3],['FMV Objection',4],['Notice of Buyout Right',5],['Funding Window',7],['Manner §',8],['Open-Market Sale',9],['Court Confirmation',10]],
-  ij:      [['Prepare Interlocutory',1],['Manner:',2],['Propose Referee',3],['Referee Oath',4],['Referee Bond',5],['Referee Engagement',6]],
-  sale:    [['Listing Agreement',2],['Marketing Period',3],['Accept Offer',4],['Notice of Sale',5],['Report of Sale',6],['MTC + Overbid',7],['Escrow Close',8],['In-Kind Survey',9]],
-  acct:    [['Mortgage / Tax',1],['Repairs + Improvements',2],['Rental Value Offset',3],['Ouster Analysis',4],['Forensic CPA',5],['Settle or Try',6],['Final Accounting Schedule',7]],
-  fees:    [['Draft Final Judgment',1],['Common-Benefit Tagging',2],['Fee Motion',3],['Fee Declaration',4],['Fee Hearing',5]],
-  close:   [['Disbursement Instructions',1],['Wire Funds',2],['Record Deeds',3],['Release Lis Pendens',4],['Referee Final Account',5],['Client Closeout',6],['Matter Status',7]]
+  intake:   [['Factory Push',1],['RingCentral',2],['Factory Enrichment',3],['Intake Form',4],['Conflict Check',5],['Pre-Screen',6],['Geo-Route',7],['Book Consultation',8]],
+  engage:   [['Conduct Consultation',1],['E-Sign Engagement',4],['Generate Engagement',3],['E-Notarize',5],['Record Trust Deed',6],['Billing Setup',7],['Matter Conversion',8]],
+  prelit:   [['Preliminary Title Report',1],['Deed History',2],['Chain-of-Title',2],['Cotenancy Ledger',3],['Contribution Records',4],['Demand Letter',5]],
+  plead:    [['Draft Verified Complaint',1],['Partner Review',2],['E-File Complaint',3],['Generate Lis Pendens',4],['405.22',5],['Certified-Mail Proof',5]],
+  service:  [['Issue Summons',1],['Serve All Cotenants',2],['Proof-of-Service',3],['Answer Deadlines',4],['Track Answers',5],['Default Prove-Up',6]],
+  disc:     [['Initial Disclosures',1],['Written Discovery',2],['Real-Estate Subpoenas',3],['Depositions of Cotenants',4],['Designate Appraiser',5],['Expungement',6],['MSA on Right',7]],
+  prpa:     [['Court-Ordered Appraisal',2],['Notice of FMV',3],['FMV Objection',4],['Notice of Buyout Right',5],['Funding Window',7],['Manner \u00a7',8],['Open-Market Sale',9],['Court Confirmation',10]],
+  ij:       [['Prepare Interlocutory',1],['Manner:',2],['Propose Referee',3],['Referee Oath',4],['Referee Bond',5],['Referee Engagement',6]],
+  sale:     [['Listing Agreement',2],['Marketing Period',3],['Accept Offer',4],['Notice of Sale',5],['Report of Sale',6],['MTC + Overbid',7],['Escrow Close',8],['In-Kind Survey',9]],
+  acctfees: [['Mortgage / Tax',1],['Repairs + Improvements',2],['Rental Value Offset',3],['Ouster Analysis',4],['Forensic CPA',5],['Settle or Try',6],['Final Accounting Schedule',7],['Draft Final Judgment',8],['Common-Benefit Tagging',9],['Fee Motion',10],['Fee Declaration',11],['Fee Hearing',12]],
+  close:    [['Disbursement Instructions',1],['Wire Funds',2],['Record Deeds',3],['Release Lis Pendens',4],['Reconvey Trust Deed',5],['Referee Final Account',6],['Matter Status',7]]
 };
 
 function taskDetail(sid, n) {
@@ -899,8 +925,8 @@ function buildStageNav() {
   nav.innerHTML = '';
   STAGES.forEach(s => {
     const b = document.createElement('button');
-    b.className = 'stage-btn' + (s.id === currentStage ? ' active' : '') + (s.conditional ? ' conditional' : '');
-    b.textContent = s.name + (s.conditional ? ' ◆' : '');
+    b.className = 'stage-btn' + (s.id === currentStage ? ' active' : '') + (s.conditional ? ' conditional' : '') + (s.gap ? ' gap' : '');
+    b.textContent = s.name + (s.conditional ? ' ◆' : '') + (s.gap ? ' ▲' : '');
     b.title = s.conditional ? 'Conditional stage — only if PRPA applies (§ 874.313)' : '';
     b.onclick = () => { currentStage = s.id; renderStage(); };
     nav.appendChild(b);
@@ -924,7 +950,7 @@ function renderTaskTable() {
   const section = document.getElementById('taskSection');
   if (currentStage === 'overview') {
     section.innerHTML = `<h3>Partition Matter Plan — Stage Map</h3>
-      <div class="sub">11-stage Litify matter plan. Most matters resolve at the pre-suit demand window or the PRPA buyout and skip later stages. The PRPA Track (◆) is conditional — it only activates when the court finds §§ 874.311–874.323 applies. Select a stage above to see the default tasks, roles, due-date triggers, and stage switches.</div>
+      <div class="sub">11-stage Litify matter plan. Most matters resolve at the pre-suit demand window or the PRPA buyout and skip later stages. The PRPA Track (◆) is conditional — it only activates when the court finds §§ 874.311–874.323 applies. Stages marked ▲ are not in Talkov’s current task-template list (gaps). Select a stage above to see the default tasks, roles, due-date triggers, and stage switches.</div>
       <div class="switch-box"><h4>How stage switches work in Litify</h4>
       <ul>
         <li>The matter's current stage is the <span class="api">litify_pm__Matter_Stage_Activity__c</span> lookup on <span class="api">litify_pm__Matter__c</span> — a stage switch is a repoint of that lookup.</li>
@@ -940,7 +966,8 @@ function renderTaskTable() {
   tasks.forEach(t => counts[taskKind(t)]++);
   const gates = tasks.filter(t => t.gate).length;
   let html = `<h3>${stageMeta.name} — Default Matter Tasks</h3>
-    <div class="sub">${meta.days} · ${meta.owners}${meta.statute ? ' · ' + meta.statute : ''} · ${tasks.length} tasks instantiate on stage activation · gold-flagged tasks gate the stage switch</div>`;
+    <div class="sub">${meta.days} · ${meta.owners}${meta.statute ? ' · ' + meta.statute : ''} · ${tasks.length} tasks instantiate on stage activation · Talkov template: <strong>${meta.talkov}</strong> · gold-flagged tasks gate the stage switch</div>`;
+  if (meta.gapNote) html += `<div class="switch-box" style="margin:0 0 14px"><h4>▲ Gap vs Talkov buildout</h4><ul><li>${meta.gapNote}</li></ul></div>`;
   html += '<table class="task-table"><thead><tr><th style="width:36px">#</th><th>Step</th><th style="width:110px">Kind</th><th style="width:130px">Role</th><th style="width:170px">Due / Trigger</th><th style="width:110px">Depends On</th></tr></thead><tbody>';
   tasks.forEach(t => {
     const kind = taskKind(t);
@@ -1083,7 +1110,7 @@ function renderTemplateView() {
       <div><div class="lbl">Step 1 — stamp</div>Set <span class="api">Set_As_Active_At__c</span> on the new active Stage Activity; update <span class="api">Stage_Status__c</span>; stamp custom <span class="api">Stage_Date__c</span> on Matter for cycle-time reporting</div>
       <div><div class="lbl">Step 2 — sweep</div>Mass-update Tasks where <span class="api">litify_pm__Matter__c = $Record.Id</span> AND <span class="api">Status = Open</span> AND <span class="api">litify_pm__Matter_Stage_Activity__c ≠ new stage</span> → <span class="api">Status = N/A</span></div>
       <div><div class="lbl">Step 3 — instantiate</div>Generate the new stage's tasks from <span class="api">litify_pm__Default_Matter_Task__c</span> (invocable: default_task_Id · matter_id · start_date); owner resolved from <span class="api">litify_pm__Matter_Team_Member__c</span> by role</div>
-      <div><div class="lbl">Step 4 — branch guards</div>PRPA skip (Stage 5 → 7), settle-early jumps (Stage 3/6 → 11 + Status = Closed: Settled), decline path (Stage 2 → Closed: Withdrawn), and closeout block until every <span class="api">Lis_Pendens__c</span> shows Released_Date__c</div>
+      <div><div class="lbl">Step 4 — branch guards</div>PRPA skip (Stage 6 → 8), settle-early jumps (Stage 3/7 → 11 + Status = Closed: Settled), decline path (Stage 2 → Closed: Withdrawn), and closeout block until every <span class="api">Lis_Pendens__c</span> shows Released_Date__c</div>
       <div><div class="lbl">Cross-plan switches</div><span class="api">litify_pm__Matter_Stage_Switch__c</span> records (plan + stage pair) define the landing stage if a matter is moved onto a different plan mid-stream</div>
     </div>
   </div>
@@ -1096,6 +1123,9 @@ function renderTemplateView() {
       <div><div class="lbl">Overbid calculator</div>Formula on confirmation task: 10% over first $10K + 5% over balance (§ 873.740)</div>
       <div><div class="lbl">PRPA clock engine</div>Scheduled paths for the 10 / 30 / 45 / 60-day deadlines on Stage 6 tasks</div>
       <div><div class="lbl">Referee tracking</div><span class="api">litify_pm__Role__c</span> = Referee + oath/bond/discharge task gates</div>
+      <div><div class="lbl">Property__c + Factory</div>Parcel object behind the buildout’s Property UI — Factory enrichment (Property Radar equity), deed history, address-first conflicts</div>
+      <div><div class="lbl">Trust_Deed__c</div>Fee-security deed: e-sign → e-notarize (Notarize) → record → reconvey at payoff</div>
+      <div><div class="lbl">Flat_Fee_Category__c</div>On <span class="api">litify_pm__Time_Entry__c</span> — flat-fee billing categories on the timekeeping screen (in buildout); pairs with Common_Benefit__c (gap)</div>
     </div>
   </div></section>`;
   v.innerHTML = html;
